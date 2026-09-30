@@ -321,10 +321,10 @@ export const GEO_CHECKS: readonly SeoCheck[] = [
       if (doc.kind === 'page' && !LOCATION_SLUG.test(doc.slug)) return notApplicable('Not a home, contact or about page.');
       const { hasAddress, hasPhone, hasEmail, localBusinessType } = doc.entity;
       if (localBusinessType && !hasAddress) {
-        return fail(`The ${doc.country.name} market is marked as a ${localBusinessType} but has no address.`, 'Add the address under Settings → Countries.');
+        return fail(`The ${doc.country.name} market is marked as a ${localBusinessType} but has no address.`, 'Add the address under Locations → Countries.');
       }
       if (hasAddress && (hasPhone || hasEmail)) return pass(`${doc.country.name}’s address and contact details are in the structured data.`);
-      return warn(0.5, `${doc.country.name} has no ${[!hasAddress ? 'address' : '', !hasPhone && !hasEmail ? 'phone or email' : ''].filter(Boolean).join(' or ')} in its structured data.`, 'Add this market’s address and phone under Settings → Countries.');
+      return warn(0.5, `${doc.country.name} has no ${[!hasAddress ? 'address' : '', !hasPhone && !hasEmail ? 'phone or email' : ''].filter(Boolean).join(' or ')} in its structured data.`, 'Add this market’s address and phone under Locations → Countries.');
     },
   },
   {

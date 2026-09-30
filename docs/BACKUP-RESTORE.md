@@ -4,7 +4,7 @@ Full-site backups: the PostgreSQL database, the media library, and a manifest
 describing both, packed into one `.zip` archive that can be downloaded, stored
 off-site, and restored.
 
-Admin screen: **Admin → Settings → Backup & restore** (`/admin/settings/backups`).
+Admin screen: **Admin → System → Backup & restore** (`/admin/settings/backups`).
 
 ---
 
@@ -127,7 +127,7 @@ When `CRON_SECRET` is unset or shorter than 16 characters the endpoint is
    environment and the request never leaves the host.
 
 4. Set the schedule itself (time, frequency, retention) in
-   **Admin → Settings → Backup & restore**, not in the cron expression. The
+   **Admin → System → Backup & restore**, not in the cron expression. The
    cron only asks "is anything due?".
 
 ### Any other host
@@ -198,7 +198,7 @@ killed container cannot wedge the system permanently.
 
 ## Importing an archive
 
-**Admin → Settings → Backup & restore → Import archive** accepts a `.zip`
+**Admin → System → Backup & restore → Import archive** accepts a `.zip`
 produced by this system. It is validated (zip structure, manifest present,
 manifest version supported, dump present when claimed), checksummed, and stored
 as a `COMPLETED` backup with origin `IMPORTED`.
@@ -220,7 +220,7 @@ Importing never restores. Restoring is a second, explicit step.
 
 Restore replaces the entire database and delete destroys a rollback point, so
 neither is granted to ordinary admins by default. Both can be assigned per role
-in **Admin → Settings → Roles & Permissions**.
+in **Admin → Administration → Roles & Permissions**.
 
 On an **existing deployment** the six `backup.*` permissions are new, so no
 role holds them until they are assigned. A super-admin always has access —

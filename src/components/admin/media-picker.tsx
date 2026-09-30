@@ -174,6 +174,7 @@ export function MediaBrowser({
       title="Media library"
       description="Choose an existing file or upload a new one."
       size="xl"
+      glass
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
@@ -247,7 +248,7 @@ export function MediaBrowser({
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
                 )}
               >
-                <span className="block aspect-square bg-muted/10">
+                <span className="block aspect-square bg-admin-workspace">
                   {item.kind === 'IMAGE' ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

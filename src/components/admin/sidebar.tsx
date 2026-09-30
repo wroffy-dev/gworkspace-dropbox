@@ -7,6 +7,7 @@ import { X, ChevronDown, PanelLeftClose, PanelLeftOpen, ExternalLink } from 'luc
 import {
   visibleModules,
   isItemActive,
+  locateRoute,
   type AdminNavItem,
   type AdminNavModule,
 } from '@/lib/admin/nav';
@@ -63,16 +64,12 @@ export function AdminSidebar({
   // right one here — the same preference the public footer already makes.
   const brandLogo = logoDarkUrl || logoUrl;
 
-  const activeModuleId = React.useMemo(() => {
-    for (const group of modules) {
-      if (group.href && isItemActive(group, pathname, search)) return group.id;
-      if (group.items.some((item) => isItemActive(item, pathname, search))) return group.id;
-      // Detail routes (/admin/pages/abc) keep their group open too.
-      if (group.items.some((item) => pathname.startsWith(`${item.href.split('?')[0]}/`)))
-        return group.id;
-    }
-    return null;
-  }, [modules, pathname, search]);
+  // The same answer the breadcrumbs give, detail routes (/admin/pages/abc)
+  // included, so the open module and the trail can never disagree.
+  const activeModuleId = React.useMemo(
+    () => locateRoute(pathname, search)?.group.id ?? null,
+    [pathname, search],
+  );
 
   const [manuallyClosed, setManuallyClosed] = React.useState<string[]>([]);
   const [extraOpen, setExtraOpen] = React.useState<string[]>([]);

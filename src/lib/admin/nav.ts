@@ -2,11 +2,17 @@ import type { PermissionKey } from '@/lib/auth/permissions';
 import { SEED_FILES_PATH } from '@/lib/seed-files/routes';
 
 /**
- * Admin information architecture.
+ * Admin information architecture — the one source of truth for the sidebar,
+ * the breadcrumbs and the command palette's "Go to" list.
  *
  * Modules group the existing routes into the areas an admin actually thinks in
  * ("Website", "Leads & CRM") instead of one flat list. Nothing here creates a
- * route: every href points at a page that already exists.
+ * route: every href points at a page that already exists, and where a screen
+ * sits in the tree says nothing about where its route folder lives — Countries
+ * is under Locations here and at /admin/settings/countries on disk.
+ *
+ * Nothing here grants access either. An item is shown only to someone holding
+ * its permission, and every page still checks that permission on the server.
  */
 
 export type AdminNavItem = {
@@ -16,15 +22,31 @@ export type AdminNavItem = {
   permission: PermissionKey | PermissionKey[];
   /** Shown in the command palette and as the icon-only tooltip subtitle. */
   description?: string;
-  /** Match the route exactly instead of by prefix. */
+  /**
+   * Match the path exactly instead of by prefix. The query string is not
+   * compared, so a filtered list (`?q=`, `?from=`) stays active; a sibling that
+   * shares the path is told apart with `notMatches` instead.
+   */
   exact?: boolean;
   /**
    * Routes that belong to this item but do not share its href prefix, used for
-   * active-state and breadcrumbs (e.g. Submissions lives under /admin/forms).
+   * active-state and breadcrumbs (e.g. the page preview under /admin/preview).
    */
   alsoMatches?: string[];
-  /** Sibling routes that must NOT mark this item active. */
+  /**
+   * Sibling routes that must NOT mark this item active. An entry with a query
+   * string excludes only that exact path carrying those parameters, which is
+   * how Staff and Roles & Permissions share /admin/staff.
+   */
   notMatches?: string[];
+  /**
+   * The href of another item in the same module that this one sits beneath,
+   * for a third breadcrumb level (Content › Blog › Categories). The sidebar
+   * stays two levels deep; this only shapes the trail.
+   */
+  parent?: string;
+  /** The breadcrumb label when it differs from the sidebar's ("Categories"). */
+  crumbLabel?: string;
   /**
    * Hidden from everyone but a super admin, whatever their permissions say.
    *
@@ -67,13 +89,14 @@ export const ADMIN_NAV: AdminNavModule[] = [
         permission: 'pages.view',
         description: 'Build and publish website pages',
         notMatches: ['/admin/pages/categories'],
+        // The full-screen preview of a page belongs to the page.
+        alsoMatches: ['/admin/preview'],
       },
       {
         label: 'Page Categories',
         href: '/admin/pages/categories',
         permission: 'pages.view',
         description: 'Group pages into a nested structure',
-        exact: true,
       },
       {
         label: 'Navigation',
@@ -88,42 +111,10 @@ export const ADMIN_NAV: AdminNavModule[] = [
         description: 'Images and files used across the site',
       },
       {
-        label: 'Popups',
-        href: '/admin/popups',
-        permission: 'marketing.manage',
-        description: 'On-site popups and offers',
-      },
-      {
         label: 'Website Design',
         href: '/admin/settings/design',
         permission: 'settings.manage',
         description: 'Colours, typography, buttons and layout',
-      },
-      {
-        label: 'Recycle Bin',
-        href: '/admin/trash',
-        permission: 'pages.view',
-        description: 'Restore a deleted page, article, category or brand',
-      },
-    ],
-  },
-  {
-    id: 'locations',
-    label: 'Locations',
-    icon: 'map-pin',
-    items: [
-      {
-        label: 'Cities',
-        href: '/admin/cities',
-        permission: 'pages.view',
-        description: 'Local address spaces inside each market, such as /delhi',
-        notMatches: ['/admin/cities/generator'],
-      },
-      {
-        label: 'City Page Generator',
-        href: '/admin/cities/generator',
-        permission: 'pages.create',
-        description: 'Copy a page into many cities at once',
       },
     ],
   },
@@ -178,6 +169,57 @@ export const ADMIN_NAV: AdminNavModule[] = [
     ],
   },
   {
+    id: 'content',
+    label: 'Content',
+    icon: 'file',
+    items: [
+      {
+        label: 'Blog',
+        href: '/admin/blog',
+        permission: 'blog.view',
+        description: 'Write and publish articles',
+        notMatches: [
+          '/admin/blog/categories',
+          '/admin/blog/tags',
+          '/admin/blog/layout',
+          '/admin/blog/design',
+        ],
+      },
+      {
+        label: 'Blog Categories',
+        crumbLabel: 'Categories',
+        parent: '/admin/blog',
+        href: '/admin/blog/categories',
+        permission: 'blog.view',
+        description: 'Organise articles by topic',
+      },
+      {
+        label: 'Blog Tags',
+        crumbLabel: 'Tags',
+        parent: '/admin/blog',
+        href: '/admin/blog/tags',
+        permission: 'blog.view',
+        description: 'Rename, re-slug and clean up tags',
+      },
+      {
+        label: 'Blog Layout',
+        crumbLabel: 'Layout',
+        parent: '/admin/blog',
+        href: '/admin/blog/layout',
+        permission: 'blog.view',
+        description: 'Order the archive, article and sidebar',
+      },
+      {
+        label: 'Blog Design',
+        crumbLabel: 'Design',
+        parent: '/admin/blog',
+        href: '/admin/blog/design',
+        permission: 'blog.view',
+        description: 'Cards, colours, typography and widths',
+      },
+    ],
+  },
+  {
     id: 'crm',
     label: 'Leads & CRM',
     icon: 'inbox',
@@ -193,12 +235,6 @@ export const ADMIN_NAV: AdminNavModule[] = [
         href: '/admin/leads',
         permission: 'leads.view',
         description: 'Every enquiry from the website',
-      },
-      {
-        label: 'Consent notice',
-        href: '/admin/consent',
-        permission: 'leads.view',
-        description: 'Wording shown beside every public form',
       },
       {
         label: 'Pipeline',
@@ -221,72 +257,20 @@ export const ADMIN_NAV: AdminNavModule[] = [
       },
       {
         label: 'Submissions',
+        parent: '/admin/forms',
         href: '/admin/forms/submissions',
         permission: 'forms.view',
         description: 'Everything visitors have submitted',
       },
-    ],
-  },
-  {
-    id: 'content',
-    label: 'Content & SEO',
-    icon: 'file',
-    items: [
       {
-        label: 'Blog',
-        href: '/admin/blog',
-        permission: 'blog.view',
-        description: 'Write and publish articles',
-        notMatches: [
-          '/admin/blog/categories',
-          '/admin/blog/tags',
-          '/admin/blog/layout',
-          '/admin/blog/design',
-        ],
-      },
-      {
-        label: 'Blog Layout',
-        href: '/admin/blog/layout',
-        permission: 'blog.view',
-        description: 'Order the archive, article and sidebar',
-      },
-      {
-        label: 'Blog Design',
-        href: '/admin/blog/design',
-        permission: 'blog.view',
-        description: 'Cards, colours, typography and widths',
-      },
-      {
-        label: 'Blog Categories',
-        href: '/admin/blog/categories',
-        permission: 'blog.view',
-        description: 'Organise articles by topic',
-      },
-      {
-        label: 'Blog Tags',
-        href: '/admin/blog/tags',
-        permission: 'blog.view',
-        description: 'Rename, re-slug and clean up tags',
-        exact: true,
-      },
-      {
-        label: 'SEO',
-        href: '/admin/seo',
-        permission: 'seo.manage',
-        description: 'Titles, social sharing and indexing',
-      },
-      {
-        label: 'SEO Intelligence',
-        href: '/admin/seo-intelligence',
-        permission: 'seo.manage',
-        description: 'SEO, AEO and GEO scores for every page',
-      },
-      {
-        label: 'Slug & URL Manager',
-        href: '/admin/slug-manager',
-        permission: 'seo.manage',
-        description: 'Addresses, URL patterns, redirects and URL health',
-        alsoMatches: ['/admin/redirects'],
+        // Reading the notice needs only leads.view — the people who work leads
+        // must see what those leads agreed to. It sits with the forms it is
+        // shown beside; its permission did not move with it.
+        label: 'Consent Notice',
+        parent: '/admin/forms',
+        href: '/admin/consent',
+        permission: 'leads.view',
+        description: 'Wording shown beside every public form',
       },
     ],
   },
@@ -296,10 +280,17 @@ export const ADMIN_NAV: AdminNavModule[] = [
     icon: 'megaphone',
     items: [
       {
+        label: 'Popups',
+        href: '/admin/popups',
+        permission: 'marketing.manage',
+        description: 'On-site popups and offers',
+      },
+      {
         label: 'Tracking & Pixels',
         href: '/admin/marketing',
         permission: 'marketing.manage',
         description: 'Analytics and advertising tags',
+        notMatches: ['/admin/marketing/campaigns'],
       },
       {
         label: 'UTM Campaigns',
@@ -318,7 +309,33 @@ export const ADMIN_NAV: AdminNavModule[] = [
         href: '/admin/reports?view=attribution',
         permission: 'leads.view',
         description: 'Which campaigns produce leads',
-        exact: true,
+      },
+    ],
+  },
+  {
+    id: 'seo',
+    label: 'SEO',
+    icon: 'search',
+    items: [
+      {
+        label: 'SEO Settings',
+        href: '/admin/seo',
+        permission: 'seo.manage',
+        description: 'Titles, social sharing and indexing',
+      },
+      {
+        label: 'SEO Intelligence',
+        href: '/admin/seo-intelligence',
+        permission: 'seo.manage',
+        description: 'SEO, AEO and GEO scores for every page',
+      },
+      {
+        label: 'Slug & URL Manager',
+        href: '/admin/slug-manager',
+        permission: 'seo.manage',
+        description: 'Addresses, URL patterns, redirects and URL health',
+        // The old Redirects address forwards here, so it belongs here.
+        alsoMatches: ['/admin/redirects'],
       },
     ],
   },
@@ -333,6 +350,54 @@ export const ADMIN_NAV: AdminNavModule[] = [
         permission: 'leads.view',
         description: 'Lead performance over time',
         exact: true,
+        // Campaign Attribution is this route with ?view=attribution.
+        notMatches: ['/admin/reports?view=attribution'],
+      },
+    ],
+  },
+  {
+    id: 'locations',
+    label: 'Locations',
+    icon: 'map-pin',
+    items: [
+      {
+        label: 'Countries',
+        href: '/admin/settings/countries',
+        permission: 'settings.manage',
+        description: 'Storefronts, URL prefixes, currencies and local contact details',
+      },
+      {
+        label: 'Cities',
+        href: '/admin/cities',
+        permission: 'pages.view',
+        description: 'Local address spaces inside each market, such as /delhi',
+        notMatches: ['/admin/cities/generator'],
+      },
+      {
+        label: 'City Page Generator',
+        href: '/admin/cities/generator',
+        permission: 'pages.create',
+        description: 'Copy a page into many cities at once',
+      },
+    ],
+  },
+  {
+    id: 'administration',
+    label: 'Administration',
+    icon: 'users',
+    items: [
+      {
+        label: 'Staff',
+        href: '/admin/staff',
+        permission: 'staff.manage',
+        description: 'People who can sign in',
+        notMatches: ['/admin/staff?tab=roles'],
+      },
+      {
+        label: 'Roles & Permissions',
+        href: '/admin/staff?tab=roles',
+        permission: 'staff.manage',
+        description: 'What each role is allowed to do',
       },
       {
         label: 'Audit Log',
@@ -343,45 +408,15 @@ export const ADMIN_NAV: AdminNavModule[] = [
     ],
   },
   {
-    id: 'settings',
-    label: 'Settings',
-    icon: 'settings',
+    id: 'system',
+    label: 'System',
+    icon: 'server',
     items: [
       {
-        label: 'Website Settings',
-        href: '/admin/settings',
-        permission: 'settings.manage',
-        description: 'Name, contact details and branding',
-        notMatches: [
-          '/admin/settings/email',
-          '/admin/settings/design',
-          '/admin/settings/countries',
-        ],
-      },
-      {
-        label: 'Countries',
-        href: '/admin/settings/countries',
-        permission: 'settings.manage',
-        description: 'Storefronts, URL prefixes, currencies and local contact details',
-      },
-      {
-        label: 'Email Settings',
-        href: '/admin/settings/email',
-        permission: 'settings.manage',
-        description: 'SMTP and notification templates',
-      },
-      {
-        label: 'Staff',
-        href: '/admin/staff',
-        permission: 'staff.manage',
-        description: 'People who can sign in',
-      },
-      {
-        label: 'Roles & Permissions',
-        href: '/admin/staff?tab=roles',
-        permission: 'staff.manage',
-        description: 'What each role is allowed to do',
-        exact: true,
+        label: 'Recycle Bin',
+        href: '/admin/trash',
+        permission: 'pages.view',
+        description: 'Restore a deleted page, article, category or brand',
       },
       {
         label: 'Backup & Restore',
@@ -399,6 +434,32 @@ export const ADMIN_NAV: AdminNavModule[] = [
       },
     ],
   },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: 'settings',
+    items: [
+      {
+        label: 'Website Settings',
+        href: '/admin/settings',
+        permission: 'settings.manage',
+        description: 'Name, contact details and branding',
+        // Every other screen under /admin/settings lives in another module.
+        notMatches: [
+          '/admin/settings/email',
+          '/admin/settings/design',
+          '/admin/settings/countries',
+          '/admin/settings/backups',
+        ],
+      },
+      {
+        label: 'Email Settings',
+        href: '/admin/settings/email',
+        permission: 'settings.manage',
+        description: 'SMTP and notification templates',
+      },
+    ],
+  },
 ];
 
 /** Strips the query string so route matching compares paths only. */
@@ -407,39 +468,49 @@ function pathOf(href: string): string {
   return index === -1 ? href : href.slice(0, index);
 }
 
+/** The query string of an href, without the `?`. */
+function queryOf(href: string): string {
+  const index = href.indexOf('?');
+  return index === -1 ? '' : href.slice(index + 1);
+}
+
+/** True when every parameter in `required` is present in `search` with that value. */
+function hasParams(required: string, search: string): boolean {
+  const current = new URLSearchParams(search);
+  return Array.from(new URLSearchParams(required).entries()).every(
+    ([key, value]) => current.get(key) === value,
+  );
+}
+
 /**
- * True when `pathname` (plus its query) should light this item up.
+ * True when the current route is `candidate`.
  *
- * `exact` items also compare the query string, which is how two entries that
- * share a route — Reports vs Campaign Attribution — stay distinguishable.
+ * A candidate with a query string names one exact path carrying those
+ * parameters — other parameters may ride along (`?view=attribution&from=…`).
+ * Without one it covers the path and everything beneath it, unless `exact`.
  */
+function routeMatches(candidate: string, pathname: string, search: string, exact = false) {
+  const path = pathOf(candidate);
+  const query = queryOf(candidate);
+  if (query) return pathname === path && hasParams(query, search);
+  if (exact) return pathname === path;
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+/** True when `pathname` (plus its query) should light this item up. */
 export function isItemActive(
   item: AdminNavItem | AdminNavModule,
   pathname: string,
   search = '',
 ): boolean {
-  const href = item.href;
-  if (!href) return false;
-
-  const target = pathOf(href);
-  const query = href.includes('?') ? href.slice(href.indexOf('?') + 1) : '';
-
-  if (item.exact) {
-    if (pathname !== target) return false;
-    // An exact item with a query must match it; one without must have none.
-    const current = new URLSearchParams(search);
-    if (!query) return Array.from(current.keys()).length === 0;
-    return Array.from(new URLSearchParams(query).entries()).every(
-      ([key, value]) => current.get(key) === value,
-    );
+  if (!item.href) return false;
+  if ('notMatches' in item && item.notMatches?.some((route) => routeMatches(route, pathname, search))) {
+    return false;
   }
-
-  const matches = (candidate: string) =>
-    pathname === candidate || pathname.startsWith(`${candidate}/`);
-
-  if ('notMatches' in item && item.notMatches?.some((exclude) => matches(exclude))) return false;
-  if (matches(target)) return true;
-  return 'alsoMatches' in item ? Boolean(item.alsoMatches?.some(matches)) : false;
+  if (routeMatches(item.href, pathname, search, item.exact)) return true;
+  return 'alsoMatches' in item
+    ? Boolean(item.alsoMatches?.some((route) => routeMatches(route, pathname, search)))
+    : false;
 }
 
 export type VisibleModule = AdminNavModule & { items: AdminNavItem[] };
@@ -455,21 +526,25 @@ export type VisibleModule = AdminNavModule & { items: AdminNavItem[] };
 export function visibleModules(
   can: (permission: PermissionKey) => boolean,
   isSuperAdmin = false,
-): Array<AdminNavModule & { items: AdminNavItem[] }> {
-  const allowed = (permission: AdminNavItem['permission'] | undefined) => {
-    if (!permission) return true;
-    return Array.isArray(permission) ? permission.some(can) : can(permission);
-  };
-
+): VisibleModule[] {
   return ADMIN_NAV.map((group) => ({
     ...group,
-    items: (group.items ?? []).filter(
-      (item) => (!item.superAdminOnly || isSuperAdmin) && allowed(item.permission),
-    ),
-  })).filter((group) => (group.href ? allowed(group.permission) : group.items.length > 0));
+    items: (group.items ?? []).filter((item) => canReach(item, can, isSuperAdmin)),
+  })).filter((group) =>
+    group.href
+      ? !group.permission || canReach({ permission: group.permission }, can)
+      : group.items.length > 0,
+  );
 }
 
-/** The group + item that own the current route, used for breadcrumbs. */
+/**
+ * The module and item that own the current route — for the breadcrumbs and for
+ * which sidebar module opens.
+ *
+ * Detail and action routes (/admin/pages/abc, /admin/leads/new) resolve through
+ * the same prefix match that lights their list item, so they need no entries of
+ * their own and cannot land in a different module from the list they belong to.
+ */
 export function locateRoute(
   pathname: string,
   search = '',
@@ -480,11 +555,21 @@ export function locateRoute(
       if (isItemActive(item, pathname, search)) return { group, item };
     }
   }
-  // Fall back to a prefix match so detail routes still resolve to their group.
-  for (const group of ADMIN_NAV) {
-    for (const item of group.items ?? []) {
-      if (pathname.startsWith(`${pathOf(item.href)}/`)) return { group, item };
-    }
-  }
   return null;
+}
+
+/** The item a nested item sits beneath, for its middle breadcrumb. */
+export function parentItem(group: AdminNavModule, item: AdminNavItem): AdminNavItem | null {
+  if (!item.parent) return null;
+  return group.items?.find((candidate) => candidate.href === item.parent) ?? null;
+}
+
+/** True when `can` allows at least one of an item's permissions. */
+export function canReach(
+  item: Pick<AdminNavItem, 'permission' | 'superAdminOnly'>,
+  can: (permission: PermissionKey) => boolean,
+  isSuperAdmin = false,
+): boolean {
+  if (item.superAdminOnly && !isSuperAdmin) return false;
+  return Array.isArray(item.permission) ? item.permission.some(can) : can(item.permission);
 }

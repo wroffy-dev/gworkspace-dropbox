@@ -9,6 +9,14 @@ import {
   blocksForSurface,
   type ImageWidgetContent,
 } from '@/lib/cms/blocks';
+import {
+  imageWidgetAlt,
+  imageWidgetBorder,
+  imageWidgetFrames,
+  imageWidgetRadius,
+  imageWidgetSizes,
+  imageWidgetVars,
+} from '@/lib/cms/image-widget';
 import { googleFontsHref, fontStack, nearestWeight, findGoogleFont } from '@/lib/cms/google-fonts';
 import { newField, starterFields, uniqueFieldName, EMPTY_FORM } from '@/lib/cms/form-model';
 
@@ -267,23 +275,30 @@ describe('artwork that may be an icon', () => {
 });
 
 describe('image widget', () => {
+  const parse = (raw: unknown) => parseBlockContent<ImageWidgetContent>('imageWidget', raw);
+
   it('is a page block in the Cards & media group, and nowhere else', () => {
     const block = getBlock('imageWidget');
     expect(block?.label).toBe('Image');
+    expect(block?.description).toBe('Display a fully configurable responsive image.');
     expect(block?.group).toBe('Cards & media');
+    expect(block?.icon).toBe('image');
     expect(BLOCK_PICKER_LIST.some((b) => b.type === 'imageWidget')).toBe(true);
     expect(blocksForSurface('blogArticle').some((b) => b.type === 'imageWidget')).toBe(false);
     expect(blocksForSurface('blogListing').some((b) => b.type === 'imageWidget')).toBe(false);
   });
 
-  it('starts empty, centred, full width on mobile and unlinked', () => {
+  it('starts empty, centred, full width and unlinked, with medium corners', () => {
     const defaults = blockDefaults('imageWidget') as ImageWidgetContent;
     expect(defaults).toMatchObject({
       imageId: null,
-      altText: '',
-      decorative: false,
+      imageAlt: '',
+      imageTitle: '',
       caption: '',
+      decorative: false,
       alignment: 'center',
+      tabletAlignment: 'inherit',
+      mobileAlignment: 'inherit',
       width: '100',
       tabletWidth: 'inherit',
       mobileWidth: '100',
@@ -294,14 +309,22 @@ describe('image widget', () => {
       linkUrl: '',
       openInNewTab: false,
       borderEnabled: false,
-      borderRadius: 'none',
+      borderColor: '',
+      borderRadius: 'md',
       shadow: 'none',
       captionAlign: 'center',
     });
   });
 
+  it('reads alt text saved under its first name', () => {
+    expect(parse({ altText: 'A router on a desk' }).imageAlt).toBe('A router on a desk');
+    // The current name wins when both are present.
+    expect(parse({ altText: 'old', imageAlt: 'new' }).imageAlt).toBe('new');
+    expect(parse({ altText: 'old' })).not.toHaveProperty('altText');
+  });
+
   it('keeps only real lengths and colours, never raw CSS', () => {
-    const parsed = parseBlockContent<ImageWidgetContent>('imageWidget', {
+    const parsed = parse({
       width: 'custom',
       customWidth: '70%',
       tabletCustomWidth: '40rem',
@@ -318,23 +341,146 @@ describe('image widget', () => {
     expect(parsed.customRadius).toBe('');
     expect(parsed.borderWidth).toBe('');
     expect(parsed.borderColor).toBe('');
+    // A length with a unit it does not know, or an expression, is dropped too.
+    expect(parse({ maxWidth: '10ch' }).maxWidth).toBe('');
+    expect(parse({ customWidth: 'min(100%, 4px)' }).customWidth).toBe('');
   });
 
   it('falls back per field rather than dropping the section', () => {
-    const parsed = parseBlockContent<ImageWidgetContent>('imageWidget', {
+    const parsed = parse({
       imageId: 'media-1',
       alignment: 'diagonal',
+      tabletAlignment: 'sideways',
+      width: '42',
       imageRatio: '5/4',
       shadow: 'huge',
+      borderRadius: 'blob',
     });
     expect(parsed.imageId).toBe('media-1');
     expect(parsed.alignment).toBe('center');
+    expect(parsed.tabletAlignment).toBe('inherit');
+    expect(parsed.width).toBe('100');
     expect(parsed.imageRatio).toBe('auto');
     expect(parsed.shadow).toBe('none');
+    expect(parsed.borderRadius).toBe('md');
   });
 
-  it('files every editor field under a group', () => {
+  it('files every editor field under a group, in the editor’s order', () => {
     const groups = new Set(BLOCKS.imageWidget!.fields.map((field) => field.group));
-    expect([...groups]).toEqual(['Image', 'Layout', 'Link', 'Appearance']);
+    expect([...groups]).toEqual([
+      'Image',
+      'SEO & Accessibility',
+      'Layout',
+      'Responsive',
+      'Link',
+      'Appearance',
+    ]);
+    // Every field the schema stores has a control.
+    const names = new Set(BLOCKS.imageWidget!.fields.map((field) => field.name));
+    for (const key of Object.keys(blockDefaults('imageWidget'))) {
+      expect(names.has(key), `${key} has no control`).toBe(true);
+    }
+  });
+});
+
+describe('image widget layout', () => {
+  const parse = (raw: unknown) => parseBlockContent<ImageWidgetContent>('imageWidget', raw);
+
+  it('inherits width and alignment downwards: desktop → tablet → mobile', () => {
+    const frames = imageWidgetFrames(
+      parse({ alignment: 'left', width: '50', tabletWidth: 'inherit', mobileWidth: 'inherit' }),
+    );
+    expect(frames.desktop).toMatchObject({ width: '50%', marginLeft: '0px', marginRight: 'auto' });
+    expect(frames.tablet).toEqual(frames.desktop);
+    expect(frames.mobile).toEqual(frames.desktop);
+  });
+
+  it('lets each screen size choose its own width and alignment', () => {
+    const frames = imageWidgetFrames(
+      parse({
+        alignment: 'right',
+        width: 'custom',
+        customWidth: '480px',
+        tabletAlignment: 'center',
+        tabletWidth: '75',
+        mobileAlignment: 'full',
+        mobileWidth: '50',
+        maxWidth: '960px',
+      }),
+    );
+    expect(frames.desktop).toEqual({
+      width: '480px',
+      maxWidth: '960px',
+      marginLeft: 'auto',
+      marginRight: '0px',
+      full: false,
+    });
+    expect(frames.tablet).toMatchObject({ width: '75%', marginLeft: 'auto', marginRight: 'auto' });
+    // Full width ignores the width and the maximum on that screen only.
+    expect(frames.mobile).toEqual({
+      width: '100%',
+      maxWidth: '100%',
+      marginLeft: '0px',
+      marginRight: '0px',
+      full: true,
+    });
+  });
+
+  it('keeps the larger screen’s width when a custom one is left blank', () => {
+    const frames = imageWidgetFrames(parse({ width: '66', tabletWidth: 'custom', tabletCustomWidth: '' }));
+    expect(frames.tablet.width).toBe('66.666%');
+  });
+
+  it('sizes "Auto" to the image’s own width', () => {
+    expect(imageWidgetFrames(parse({ width: 'auto' }), 640).desktop.width).toBe('640px');
+    expect(imageWidgetFrames(parse({ width: 'auto' }), null).desktop.width).toBe('100%');
+  });
+
+  it('writes one set of variables per screen size, and forces only full width', () => {
+    const vars = imageWidgetVars(
+      imageWidgetFrames(
+        parse({ width: '25', tabletAlignment: 'full', mobileAlignment: 'left', mobileWidth: 'inherit' }),
+      ),
+    );
+    expect(vars).toMatchObject({
+      '--iw-w': '25%',
+      '--iw-w-t': '100%',
+      '--iw-fw-t': '100%',
+      '--iw-w-m': '25%',
+      '--iw-ml-m': '0px',
+    });
+    expect(vars).not.toHaveProperty('--iw-fw');
+    expect(vars).not.toHaveProperty('--iw-fw-m');
+  });
+
+  it('asks the browser for a file near the size each screen draws', () => {
+    const sizes = imageWidgetSizes(
+      imageWidgetFrames(parse({ width: 'custom', customWidth: '30rem', tabletWidth: '50' })),
+    );
+    expect(sizes).toBe('(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 480px');
+  });
+
+  it('draws radii from the layout tokens, and borders only when switched on', () => {
+    expect(imageWidgetRadius(parse({ borderRadius: 'none' }))).toBeUndefined();
+    expect(imageWidgetRadius(parse({ borderRadius: 'md' }))).toContain('--layout-radius');
+    expect(imageWidgetRadius(parse({ borderRadius: 'lg' }))).toContain('--layout-card-radius');
+    expect(imageWidgetRadius(parse({ borderRadius: 'custom', customRadius: '24px' }))).toBe('24px');
+    expect(imageWidgetBorder(parse({ borderWidth: '3px' }))).toEqual({});
+    expect(imageWidgetBorder(parse({ borderEnabled: true }))).toMatchObject({
+      borderWidth: '1px',
+      borderStyle: 'solid',
+    });
+    expect(imageWidgetBorder(parse({ borderEnabled: true, borderColor: '#ff0000' })).borderColor).toBe(
+      '#FF0000',
+    );
+  });
+
+  it('takes alt text from the section, then the library, never the filename', () => {
+    const library = { altText: 'Library alt' };
+    expect(imageWidgetAlt(parse({ imageAlt: 'Own alt' }), library)).toBe('Own alt');
+    expect(imageWidgetAlt(parse({ imageAlt: '  ' }), library)).toBe('Library alt');
+    expect(imageWidgetAlt(parse({}), { altText: '' })).toBe('');
+    expect(imageWidgetAlt(parse({}), null)).toBe('');
+    expect(imageWidgetAlt(parse({ imageAlt: 'Own alt', decorative: true }), library)).toBe('');
   });
 });

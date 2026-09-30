@@ -466,7 +466,7 @@ existing files; each `Media` row records the provider it was stored with.
 ## Backup and restore
 
 Full-site backups — database plus media library — from
-**Admin → Settings → Backup & restore**. Take one by hand, schedule them, keep
+**Admin → System → Backup & restore**. Take one by hand, schedule them, keep
 them on disk or in a private S3/R2 bucket, download them, and restore the site
 from one when something goes wrong.
 

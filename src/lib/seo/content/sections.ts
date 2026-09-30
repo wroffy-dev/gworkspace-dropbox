@@ -363,9 +363,9 @@ const PAGE_EXTRACTORS: Record<string, Extractor> = {
     });
   },
   imageWidget(c, content) {
-    c.media(content.imageId, content.altText, { decorative: content.decorative === true });
+    c.media(content.imageId, content.imageAlt, { decorative: content.decorative === true });
     c.paragraph(content.caption);
-    c.link(content.linkUrl, content.imageTitle || content.altText);
+    c.link(content.linkUrl, content.imageTitle || content.imageAlt);
   },
   iconBox(c, content) {
     c.media(content.imageId, '', { decorative: true });

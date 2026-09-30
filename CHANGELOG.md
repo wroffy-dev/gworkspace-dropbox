@@ -12,6 +12,22 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Image section editor with live preview** (Pages → a page → an Image
+  section). The Content tab shows the image beside its controls — side by side
+  when the editor is wide, stacked on tablets and phones — and redraws as you
+  edit, for Desktop, Tablet or Mobile. Controls are grouped (Image, SEO &
+  Accessibility, Layout, Responsive, Link, Appearance) into sections that open
+  and close. The preview draws with the same component as the published page.
+  - Alignment can now differ per screen size, like width already could.
+  - Corner radii come from the site's layout tokens; new sections start at
+    Medium. Shadows are softer and layered.
+  - The alt text field is stored as `imageAlt`, like every other block's;
+    sections saved with the old `altText` are still read.
+- **Liquid Glass styles**: `.liquid-glass`, `.liquid-glass-soft`,
+  `.liquid-glass-panel` and `.liquid-tab-active`, built on two tokens so a
+  dark theme can retune them. Used only on the section editor's tabs, the image
+  preview panel and the media picker, with a solid fallback where the browser
+  cannot blur and for reduced transparency.
 - **Image section** (Page Builder → Add section → Cards & media → Image): one
   image from the Media Library with its own alt text (blank uses the library's),
   a decorative switch, optional title and caption (`<figure>`/`<figcaption>`).
@@ -59,9 +75,23 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
   one market. Deleting a market also deletes its cities, and says so.
 - The Pages list has a City filter and a city badge, and the page editor says
   which city a page belongs to and where it was generated from.
+- **Admin navigation reorganised** into Dashboard, Website, Products, Content,
+  Leads & CRM, Marketing, SEO, Reports, Locations, Administration, System and
+  Settings. Only where things are listed changed: every URL, permission and
+  screen is the same.
+  - Popups → Marketing; Countries → Locations; Staff, Roles & Permissions and
+    the Audit Log → Administration; Recycle Bin, Backup & Restore and Seed
+    Files → System; Consent Notice sits with Forms; SEO is its own module.
+  - Breadcrumbs follow the new tree, add a middle step for nested screens
+    (Content › Blog › Categories), link a detail screen back to its list, and
+    only link to screens the signed-in user may open.
 
 ### Fixed
 
+- **One sidebar item lights up per screen.** Roles & Permissions also lit up
+  Staff, UTM Campaigns lit up Tracking & Pixels, and Backup & Restore lit up
+  Website Settings; a filtered Reports list (`?from=`) or tag search (`?q=`)
+  lit up nothing and lost its breadcrumb.
 - **Icon cards and Icon box: an uploaded image now sticks.** Choosing a
   Media Library image (PNG, SVG or any other) for a card that already had an
   icon wrote the image and then cleared the icon from the same stale values,

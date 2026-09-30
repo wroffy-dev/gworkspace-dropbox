@@ -80,7 +80,7 @@ export function AdminTopbar({
 
         {/* Breadcrumbs take the space on desktop; search owns it on mobile. */}
         <div className="hidden min-w-0 flex-1 lg:block">
-          <AdminBreadcrumbs />
+          <AdminBreadcrumbs can={can} isSuperAdmin={isSuperAdmin} />
         </div>
 
         <div className="min-w-0 flex-1 lg:max-w-xs lg:flex-none">
@@ -184,7 +184,7 @@ export function AdminTopbar({
 
       {/* Breadcrumbs move below the bar on small screens so they stay readable. */}
       <div className="border-t border-admin-nav/10 px-4 py-2 lg:hidden">
-        <AdminBreadcrumbs />
+        <AdminBreadcrumbs can={can} isSuperAdmin={isSuperAdmin} />
       </div>
     </header>
   );

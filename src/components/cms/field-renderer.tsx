@@ -32,6 +32,12 @@ const WIDTH_CLASS: Record<string, string> = {
   third: 'sm:col-span-1',
 };
 
+const CONTAINER_WIDTH_CLASS: Record<string, string> = {
+  full: 'cms-field--full',
+  half: 'cms-field--half',
+  third: 'cms-field--half',
+};
+
 /**
  * Renders an entire block editor from its field descriptors.
  *
@@ -44,6 +50,9 @@ export function FieldList({
   onChange,
   onChangeMany,
   idPrefix,
+  collapsibleGroups = false,
+  defaultOpenGroups,
+  layout = 'viewport',
 }: {
   fields: FieldDescriptor[];
   values: FieldValues;
@@ -55,6 +64,19 @@ export function FieldList({
    */
   onChangeMany?: (patch: Record<string, unknown>) => void;
   idPrefix: string;
+  /**
+   * Draw each field `group` as a section that opens and closes, so a block with
+   * many controls reads as a few short lists. Off by default: a short editor is
+   * clearer with everything showing.
+   */
+  collapsibleGroups?: boolean;
+  /** Groups open on first render when collapsible. Omitted, every group opens. */
+  defaultOpenGroups?: string[];
+  /**
+   * `container` sizes the two-column grid to the editor's own width rather than
+   * the window's, for an editor that shares the row with something else.
+   */
+  layout?: 'viewport' | 'container';
 }) {
   const changeMany =
     onChangeMany ??
@@ -62,33 +84,117 @@ export function FieldList({
       for (const [name, value] of Object.entries(patch)) onChange(name, value);
     });
   const visible = fields.filter((field) => isFieldVisible(field, values));
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
+  const container = layout === 'container';
+
+  const control = (field: FieldDescriptor) => (
+    <div
+      key={field.name}
+      className={
+        container
+          ? CONTAINER_WIDTH_CLASS[('width' in field && field.width) || 'full']
+          : cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])
+      }
+    >
+      <FieldControl
+        field={field}
+        value={readFieldPath(values, field.name)}
+        onChange={(value) => onChange(field.name, value)}
+        siblings={values}
+        onChangeFields={changeMany}
+        id={`${idPrefix}-${field.name}`}
+      />
+    </div>
+  );
+
+  const gridClass = container ? 'cms-field-grid' : 'grid gap-4 sm:grid-cols-2';
+
+  if (collapsibleGroups) {
+    // Consecutive fields sharing a group form one section.
+    const runs: Array<{ group: string; fields: FieldDescriptor[] }> = [];
+    for (const field of visible) {
+      const group = field.group ?? '';
+      const last = runs[runs.length - 1];
+      if (last && last.group === group) last.fields.push(field);
+      else runs.push({ group, fields: [field] });
+    }
+    return (
+      <div className={cn('space-y-2.5', container && 'cms-field-container')}>
+        {runs.map((run) => (
+          <FieldGroup
+            key={run.group || 'fields'}
+            title={run.group}
+            id={`${idPrefix}-group-${run.group.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+            defaultOpen={!defaultOpenGroups || defaultOpenGroups.includes(run.group)}
+          >
+            <div className={gridClass}>{run.fields.map(control)}</div>
+          </FieldGroup>
+        ))}
+      </div>
+    );
+  }
+
+  const list = (
+    <div className={gridClass}>
       {visible.map((field, index) => (
         <React.Fragment key={field.name}>
           {field.group && field.group !== visible[index - 1]?.group ? (
             <h3
               className={cn(
-                'text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2',
+                'text-xs font-semibold uppercase tracking-wide text-muted',
+                container ? 'cms-field--full' : 'sm:col-span-2',
                 index > 0 && 'mt-2 border-t border-hairline pt-4',
               )}
             >
               {field.group}
             </h3>
           ) : null}
-          <div className={cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])}>
-            <FieldControl
-              field={field}
-              value={readFieldPath(values, field.name)}
-              onChange={(value) => onChange(field.name, value)}
-              siblings={values}
-              onChangeFields={changeMany}
-              id={`${idPrefix}-${field.name}`}
-            />
-          </div>
+          {control(field)}
         </React.Fragment>
       ))}
     </div>
+  );
+  return container ? <div className="cms-field-container">{list}</div> : list;
+}
+
+/** One collapsible section of a grouped editor. */
+function FieldGroup({
+  title,
+  id,
+  defaultOpen,
+  children,
+}: {
+  title: string;
+  id: string;
+  defaultOpen: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  if (!title) return <>{children}</>;
+  return (
+    <section className="rounded-xl border border-hairline bg-surface">
+      <h3>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-controls={id}
+          className={cn(
+            'flex min-h-[2.75rem] w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2 text-left',
+            'text-sm font-semibold text-content transition-colors hover:bg-muted/[0.04]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+          )}
+        >
+          <span className="min-w-0 break-words">{title}</span>
+          <ChevronDown
+            className={cn('h-4 w-4 shrink-0 text-muted transition-transform', open && 'rotate-180')}
+            aria-hidden="true"
+          />
+        </button>
+      </h3>
+      <div id={id} hidden={!open} className="border-t border-hairline px-3.5 pb-4 pt-3.5">
+        {children}
+      </div>
+    </section>
   );
 }
 

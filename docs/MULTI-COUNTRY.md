@@ -297,7 +297,7 @@ Every country field is optional and **falls back to the global value**. A market
 nobody has configured renders exactly what the single-country site rendered,
 which is why India's footer and structured data did not change when this landed.
 
-Edit both under **Settings → Countries**.
+Edit both under **Locations → Countries**.
 
 ---
 
@@ -329,7 +329,7 @@ away. The export is additionally narrowed to the markets the user may see.
 
 ## Sync from India
 
-**Settings → Countries → a market → Sync from India.**
+**Locations → Countries → a market → Sync from India.**
 
 India — whichever market is the default — is the master. Every other market gets
 a **Sync from India** button; India never does, because there is nothing to copy
@@ -752,7 +752,7 @@ refuses to start if the scratch URL names the same host and database as
 
 Adding Qatar needs **no code change and no deployment**.
 
-1. **Settings → Countries → Add country.**
+1. **Locations → Countries → Add country.**
    - Name: `Qatar`
    - ISO code: `QA`
    - URL prefix: `qa`
