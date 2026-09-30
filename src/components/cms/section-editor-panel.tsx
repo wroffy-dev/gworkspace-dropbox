@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { Field, Input } from '@/components/ui/field';
 import { FieldList, type FieldValues } from './field-renderer';
-import { writeFieldPath } from '@/lib/cms/fields';
+import { writeFieldPath, writeFieldPaths } from '@/lib/cms/fields';
 import { DesignPanel } from './design-panel';
 import type { BuilderSection } from './section-builder';
 
@@ -233,6 +233,12 @@ export function SectionEditorPanel({
                 edit(`content:${field}`, {
                   ...draft,
                   content: writeFieldPath(content, field, value) as FieldValues,
+                })
+              }
+              onChangeMany={(patch) =>
+                edit(`content:${Object.keys(patch).join(',')}`, {
+                  ...draft,
+                  content: writeFieldPaths(content, patch) as FieldValues,
                 })
               }
             />

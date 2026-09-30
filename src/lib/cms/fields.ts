@@ -119,6 +119,12 @@ type FieldVariant =
 export type FieldDescriptor = FieldVariant & {
   showWhen?: FieldCondition;
   /**
+   * A subheading for a long editor. The generated editor prints it above the
+   * first visible field of each run of fields sharing a group, and nothing
+   * else reads it — so it only arranges the form, never the stored content.
+   */
+  group?: string;
+  /**
    * What a new repeater item starts this field at.
    *
    * Without one a blank item takes the empty value for its kind, which is
@@ -176,6 +182,17 @@ export function writeFieldPath(
 
   cursor[segments[segments.length - 1]!] = value;
   return next;
+}
+
+/** `writeFieldPath` for several fields at once, in one new object. */
+export function writeFieldPaths(
+  values: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.entries(patch).reduce(
+    (next, [name, value]) => writeFieldPath(next, name, value),
+    values,
+  );
 }
 
 export function isFieldVisible(field: FieldDescriptor, values: Record<string, unknown>): boolean {

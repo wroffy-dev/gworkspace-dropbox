@@ -154,8 +154,13 @@ function inspectSvg(buffer: Buffer): string | null {
     [/<use[^>]*href=["']?https?:/, stripped, 'a remote reference'],
     [/<!entity|<!doctype[^>]*entity/, stripped, 'an XML entity'],
     [/javascript:|data:text\/html/, stripped, 'a script URL'],
-    // Attribute boundary is a space, quote or the tag name itself.
-    [/[\s"'][a-z-]*on[a-z]+ ?=/, collapsed, 'an event handler'],
+    // An event handler is an attribute whose *name* starts with "on", so the
+    // match starts at an attribute boundary: whitespace, a quote (`"x"onload=`),
+    // a slash, or a namespace colon (`ev:onload`). Letters in front of "on"
+    // make an ordinary attribute — `standalone="no"` in the XML declaration
+    // every Inkscape file carries, `exponent`, `contentScriptType` — and used
+    // to reject harmless icons.
+    [/[\s"'/:]on[a-z]+ ?=/, collapsed, 'an event handler'],
     [/<set|<animate[^>]*attributename=["']? ?on/, collapsed, 'a scripted animation'],
   ];
 

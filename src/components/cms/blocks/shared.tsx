@@ -53,6 +53,12 @@ export type BlockContext = {
    * has to query for the product it happens to be on.
    */
   product?: ProductRenderContext;
+  /**
+   * Rendering inside the admin preview rather than for a visitor. A block uses
+   * it only to show an editor what is missing — an empty image slot, say —
+   * where a visitor should simply see nothing.
+   */
+  preview?: boolean;
 };
 
 /**
@@ -263,6 +269,10 @@ export type CmsImageProps = {
   wrapperClassName?: string;
   /** Renders a dashed placeholder when no image is chosen. */
   placeholder?: boolean;
+  /** Draws an empty alt on purpose, skipping the library's alt text. */
+  decorative?: boolean;
+  /** Optional `title` attribute, shown as a tooltip. */
+  title?: string;
 };
 
 /**
@@ -283,6 +293,8 @@ export function CmsImage({
   className,
   wrapperClassName,
   placeholder = false,
+  decorative = false,
+  title,
 }: CmsImageProps) {
   const aspect = RATIO_STYLE[ratio];
 
@@ -309,7 +321,8 @@ export function CmsImage({
     >
       <NextImage
         src={media.url}
-        alt={alt?.trim() || media.altText || ''}
+        alt={decorative ? '' : alt?.trim() || media.altText || ''}
+        title={title?.trim() || undefined}
         {...(aspect ? { fill: true } : { width: media.width ?? 1200, height: media.height ?? 800 })}
         sizes={sizes}
         priority={priority}

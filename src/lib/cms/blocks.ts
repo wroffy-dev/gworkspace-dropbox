@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { panelDesignSchema } from '@/lib/cms/design';
+import { normaliseLength, panelDesignSchema } from '@/lib/cms/design';
+import { normaliseColor } from './color';
 import { formStyleField, formStyleGroups } from './form-style';
 import type { FieldDescriptor } from './fields';
 import {
@@ -443,6 +444,94 @@ const imageBoxSchema = z.object({
   ...cardCtaFields.shape,
 });
 
+// --- imageWidget -------------------------------------------------------------
+/**
+ * A CSS length the image widget writes into a custom property.
+ *
+ * Only a number with one of the design panel's units survives ('480px', '70%',
+ * '40rem'); anything else — a keyword, a `calc()`, a stray semicolon — becomes
+ * `''`, which means 'not set'. Negative sizes make no sense for an image.
+ */
+const imageLength = z
+  .string()
+  .max(16)
+  .catch('')
+  .default('')
+  .transform((value) => {
+    const length = normaliseLength(value);
+    return length.startsWith('-') ? '' : length;
+  });
+
+export const IMAGE_WIDGET_WIDTHS = [
+  'auto',
+  '25',
+  '33',
+  '50',
+  '66',
+  '75',
+  '100',
+  'custom',
+] as const;
+const imageWidgetWidth = z.enum(IMAGE_WIDGET_WIDTHS);
+
+const imageWidgetSchema = z.object({
+  imageId: z.string().nullable().default(null),
+  /** Blank falls back to the media library's alt text. */
+  altText: z.string().max(200).default(''),
+  /** Drawn with an empty alt, so screen readers skip it. */
+  decorative: z.boolean().catch(false).default(false),
+  imageTitle: z.string().max(200).default(''),
+  caption: z.string().max(400).default(''),
+  captionAlign: z
+    .enum(['left', 'center', 'right'])
+    .catch('center')
+    .default('center'),
+
+  alignment: z
+    .enum(['left', 'center', 'right', 'full'])
+    .catch('center')
+    .default('center'),
+  width: imageWidgetWidth.catch('100').default('100'),
+  customWidth: imageLength,
+  /** `inherit` keeps the larger screen's width. */
+  tabletWidth: z
+    .enum(['inherit', ...IMAGE_WIDGET_WIDTHS])
+    .catch('inherit')
+    .default('inherit'),
+  tabletCustomWidth: imageLength,
+  mobileWidth: z
+    .enum(['inherit', ...IMAGE_WIDGET_WIDTHS])
+    .catch('100')
+    .default('100'),
+  mobileCustomWidth: imageLength,
+  maxWidth: imageLength,
+
+  imageRatio,
+  imageFit: objectFit,
+  imagePosition: objectPosition,
+
+  linkUrl: z.string().max(500).default(''),
+  openInNewTab: z.boolean().catch(false).default(false),
+
+  borderRadius: z
+    .enum(['none', 'sm', 'md', 'lg', 'xl', 'full', 'custom'])
+    .catch('none')
+    .default('none'),
+  customRadius: imageLength,
+  borderEnabled: z.boolean().catch(false).default(false),
+  borderWidth: imageLength,
+  borderColor: z
+    .string()
+    .max(40)
+    .catch('')
+    .default('')
+    .transform((value) => normaliseColor(value)),
+  shadow: z
+    .enum(['none', 'sm', 'md', 'lg', 'xl'])
+    .catch('none')
+    .default('none'),
+});
+
 const iconBoxSchema = z.object({
   icon: z.string().max(40).default('star'),
   imageId: z.string().nullable().default(null),
@@ -605,6 +694,21 @@ const POSITION_OPTIONS = [
 const ALIGN_OPTIONS = [
   { label: 'Left', value: 'left' },
   { label: 'Centre', value: 'center' },
+];
+
+/** Files a run of fields under one editor subheading. */
+const inGroup = (group: string, fields: FieldDescriptor[]): FieldDescriptor[] =>
+  fields.map((field) => ({ ...field, group }));
+
+const IMAGE_WIDTH_OPTIONS = [
+  { label: 'Auto (natural size)', value: 'auto' },
+  { label: '25%', value: '25' },
+  { label: '33%', value: '33' },
+  { label: '50%', value: '50' },
+  { label: '66%', value: '66' },
+  { label: '75%', value: '75' },
+  { label: '100%', value: '100' },
+  { label: 'Custom', value: 'custom' },
 ];
 
 const ICON_STYLE_OPTIONS = [
@@ -1540,6 +1644,228 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
     ],
   },
 
+  imageWidget: {
+    type: 'imageWidget',
+    design: ['image'],
+    label: 'Image',
+    description: 'Display a fully configurable image.',
+    group: 'Cards & media',
+    icon: 'image',
+    surfaces: ['page'],
+    schema: imageWidgetSchema,
+    fields: [
+      ...inGroup('Image', [
+        { kind: 'media', name: 'imageId', label: 'Image' },
+        {
+          kind: 'text',
+          name: 'altText',
+          label: 'Alt text',
+          help: 'Describes the image for screen readers. Blank uses the Media Library alt text.',
+        },
+        {
+          kind: 'boolean',
+          name: 'decorative',
+          label: 'Decorative image',
+          help: 'Adds nothing to the page’s meaning, so screen readers skip it.',
+          width: 'half',
+        },
+        {
+          kind: 'text',
+          name: 'imageTitle',
+          label: 'Title',
+          help: 'Optional tooltip.',
+          width: 'half',
+        },
+        {
+          kind: 'textarea',
+          name: 'caption',
+          label: 'Caption',
+          rows: 2,
+          help: 'Optional.',
+        },
+        {
+          kind: 'select',
+          name: 'captionAlign',
+          label: 'Caption alignment',
+          width: 'half',
+          options: [...ALIGN_OPTIONS, { label: 'Right', value: 'right' }],
+        },
+      ]),
+      ...inGroup('Layout', [
+        {
+          kind: 'select',
+          name: 'alignment',
+          label: 'Alignment',
+          width: 'half',
+          options: [
+            ...ALIGN_OPTIONS,
+            { label: 'Right', value: 'right' },
+            { label: 'Full width', value: 'full' },
+          ],
+        },
+        {
+          kind: 'select',
+          name: 'width',
+          label: 'Width (desktop)',
+          width: 'half',
+          options: IMAGE_WIDTH_OPTIONS,
+          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
+        },
+        {
+          kind: 'length',
+          name: 'customWidth',
+          label: 'Custom width (desktop)',
+          width: 'half',
+          placeholder: '480px',
+          showWhen: { field: 'width', equals: ['custom'] },
+        },
+        {
+          kind: 'select',
+          name: 'tabletWidth',
+          label: 'Width (tablet)',
+          width: 'half',
+          options: [
+            { label: 'Same as desktop', value: 'inherit' },
+            ...IMAGE_WIDTH_OPTIONS,
+          ],
+          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
+        },
+        {
+          kind: 'length',
+          name: 'tabletCustomWidth',
+          label: 'Custom width (tablet)',
+          width: 'half',
+          placeholder: '90%',
+          showWhen: { field: 'tabletWidth', equals: ['custom'] },
+        },
+        {
+          kind: 'select',
+          name: 'mobileWidth',
+          label: 'Width (mobile)',
+          width: 'half',
+          options: [
+            { label: 'Same as tablet', value: 'inherit' },
+            ...IMAGE_WIDTH_OPTIONS,
+          ],
+          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
+        },
+        {
+          kind: 'length',
+          name: 'mobileCustomWidth',
+          label: 'Custom width (mobile)',
+          width: 'half',
+          placeholder: '100%',
+          showWhen: { field: 'mobileWidth', equals: ['custom'] },
+        },
+        {
+          kind: 'length',
+          name: 'maxWidth',
+          label: 'Maximum width',
+          width: 'half',
+          placeholder: '1200px',
+          help: 'Optional.',
+          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
+        },
+        {
+          kind: 'select',
+          name: 'imageRatio',
+          label: 'Aspect ratio',
+          width: 'half',
+          options: RATIO_OPTIONS,
+        },
+        {
+          kind: 'select',
+          name: 'imageFit',
+          label: 'Image fit',
+          width: 'half',
+          options: FIT_OPTIONS,
+        },
+        {
+          kind: 'select',
+          name: 'imagePosition',
+          label: 'Focal point',
+          width: 'half',
+          options: POSITION_OPTIONS,
+        },
+      ]),
+      ...inGroup('Link', [
+        {
+          kind: 'url',
+          name: 'linkUrl',
+          label: 'Link URL',
+          help: 'Optional. Makes the image clickable.',
+          placeholder: '/contact or https://…',
+        },
+        {
+          kind: 'boolean',
+          name: 'openInNewTab',
+          label: 'Open in new tab',
+          width: 'half',
+        },
+      ]),
+      ...inGroup('Appearance', [
+        {
+          kind: 'select',
+          name: 'borderRadius',
+          label: 'Corner radius',
+          width: 'half',
+          options: [
+            { label: 'None', value: 'none' },
+            { label: 'Small', value: 'sm' },
+            { label: 'Medium', value: 'md' },
+            { label: 'Large', value: 'lg' },
+            { label: 'Extra large', value: 'xl' },
+            { label: 'Round (pill / circle)', value: 'full' },
+            { label: 'Custom', value: 'custom' },
+          ],
+        },
+        {
+          kind: 'length',
+          name: 'customRadius',
+          label: 'Custom radius',
+          width: 'half',
+          placeholder: '24px',
+          showWhen: { field: 'borderRadius', equals: ['custom'] },
+        },
+        {
+          kind: 'select',
+          name: 'shadow',
+          label: 'Shadow',
+          width: 'half',
+          options: [
+            { label: 'None', value: 'none' },
+            { label: 'Small', value: 'sm' },
+            { label: 'Medium', value: 'md' },
+            { label: 'Large', value: 'lg' },
+            { label: 'Extra large', value: 'xl' },
+          ],
+        },
+        {
+          kind: 'boolean',
+          name: 'borderEnabled',
+          label: 'Border',
+          width: 'half',
+        },
+        {
+          kind: 'length',
+          name: 'borderWidth',
+          label: 'Border width',
+          width: 'half',
+          placeholder: '1px',
+          showWhen: { field: 'borderEnabled', equals: [true] },
+        },
+        {
+          kind: 'color',
+          name: 'borderColor',
+          label: 'Border colour',
+          width: 'half',
+          help: 'Blank uses the theme’s hairline colour.',
+          showWhen: { field: 'borderEnabled', equals: [true] },
+        },
+      ]),
+    ],
+  },
+
   iconBox: {
     type: 'iconBox',
     label: 'Icon box',
@@ -1960,6 +2286,7 @@ export type StepsContent = z.infer<typeof stepsSchema>;
 export type ImageCardsContent = z.infer<typeof imageCardsSchema>;
 export type IconCardsContent = z.infer<typeof iconCardsSchema>;
 export type ImageBoxContent = z.infer<typeof imageBoxSchema>;
+export type ImageWidgetContent = z.infer<typeof imageWidgetSchema>;
 export type IconBoxContent = z.infer<typeof iconBoxSchema>;
 export type ListSectionContent = z.infer<typeof listSectionSchema>;
 export type HeadingTextContent = z.infer<typeof headingTextSchema>;

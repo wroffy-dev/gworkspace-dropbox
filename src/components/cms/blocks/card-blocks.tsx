@@ -1,7 +1,10 @@
+import type * as React from 'react';
+import Link from 'next/link';
 import type {
   ImageCardsContent,
   IconCardsContent,
   ImageBoxContent,
+  ImageWidgetContent,
   IconBoxContent,
   ListSectionContent,
   HeadingTextContent,
@@ -12,6 +15,7 @@ import { getMedia, getMediaByIds } from '@/lib/services/media';
 import { resolveCmsIcon } from '@/components/ui/icons';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { safeUrl } from '@/lib/utils/sanitize';
 import {
   SectionHeading,
   CtaLink,
@@ -311,6 +315,199 @@ export async function ImageBoxBlock({ content, ctx }: { content: ImageBoxContent
       <div className={cn(content.layout === 'imageLeft' && 'lg:order-2')}>{copy}</div>
       <div className={cn(content.layout === 'imageLeft' && 'lg:order-1')}>{picture}</div>
     </div>
+  );
+}
+
+const WIDGET_PERCENT: Record<string, string> = {
+  '25': '25%',
+  '33': '33.333%',
+  '50': '50%',
+  '66': '66.666%',
+  '75': '75%',
+  '100': '100%',
+};
+
+const WIDGET_RADIUS: Record<string, string | undefined> = {
+  none: undefined,
+  sm: '0.375rem',
+  md: '0.75rem',
+  lg: '1rem',
+  xl: '1.5rem',
+  full: '9999px',
+};
+
+const WIDGET_SHADOW: Record<string, string> = {
+  none: '',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+  xl: 'shadow-xl',
+};
+
+/**
+ * One breakpoint's width choice as a CSS length, or undefined to inherit.
+ *
+ * Every value is either a fixed percentage or a length the schema has already
+ * normalised, so nothing an administrator types reaches the style attribute
+ * unchecked. "Auto" is the image's own width; the frame's `max-width: 100%`
+ * keeps it from overflowing a narrower screen.
+ */
+function widgetWidth(choice: string, custom: string, naturalWidth: number | null | undefined) {
+  if (choice === 'custom') return custom || undefined;
+  if (choice === 'auto') return naturalWidth ? `${naturalWidth}px` : '100%';
+  return WIDGET_PERCENT[choice];
+}
+
+/** A width as a `sizes` entry: the slot the browser should pick a file for. */
+function sizesEntry(width: string | undefined): string {
+  if (!width) return '100vw';
+  const match = /^(\d+(?:\.\d+)?)(px|%|rem|em|vw|vh)$/.exec(width);
+  if (!match) return '100vw';
+  const amount = Number(match[1]);
+  switch (match[2]) {
+    case 'px':
+      return `${Math.round(amount)}px`;
+    case 'rem':
+    case 'em':
+      return `${Math.round(amount * 16)}px`;
+    case '%':
+    case 'vw':
+      return `${Math.min(100, Math.round(amount))}vw`;
+    default:
+      return '100vw';
+  }
+}
+
+/**
+ * A single, fully configurable image.
+ *
+ * The frame is sized by the content's per-screen widths, written as custom
+ * properties the `.cms-image-widget` rule reads; the design panel's own
+ * responsive Image width, when set, overrides them the way its column counts
+ * override a block's. The image inside fills the frame, keeping its intrinsic
+ * ratio unless one is chosen.
+ */
+export async function ImageWidgetBlock({
+  content,
+  ctx,
+}: {
+  content: ImageWidgetContent;
+  ctx: BlockContext;
+}) {
+  const image = await getMedia(content.imageId);
+  // No image — never chosen, or since deleted from the library. An editor sees
+  // an empty slot to fill; a visitor sees nothing rather than a broken frame.
+  if (!image && !ctx.preview) return null;
+  const full = content.alignment === 'full';
+
+  const desktop = full ? '100%' : widgetWidth(content.width, content.customWidth, image?.width);
+  const tablet = full
+    ? undefined
+    : content.tabletWidth === 'inherit'
+      ? undefined
+      : widgetWidth(content.tabletWidth, content.tabletCustomWidth, image?.width);
+  const mobile = full
+    ? undefined
+    : content.mobileWidth === 'inherit'
+      ? undefined
+      : widgetWidth(content.mobileWidth, content.mobileCustomWidth, image?.width);
+
+  const vars: Record<string, string> = {};
+  if (desktop) vars['--iw-w'] = desktop;
+  if (tablet) vars['--iw-w-tablet'] = tablet;
+  if (mobile) vars['--iw-w-mobile'] = mobile;
+  if (content.maxWidth && !full) vars['--iw-max-w'] = content.maxWidth;
+
+  const tabletSlot = tablet ?? desktop;
+  const sizes = [
+    `(max-width: 767px) ${sizesEntry(mobile ?? tabletSlot)}`,
+    `(max-width: 1023px) ${sizesEntry(tabletSlot)}`,
+    sizesEntry(desktop),
+  ].join(', ');
+
+  const radius =
+    content.borderRadius === 'custom'
+      ? content.customRadius || undefined
+      : WIDGET_RADIUS[content.borderRadius];
+
+  const alt = content.decorative ? '' : content.altText.trim() || image?.altText?.trim() || '';
+  const href = image ? safeUrl(content.linkUrl) : null;
+  const caption = content.caption.trim();
+
+  const picture = (
+    <div
+      className={cn(
+        'overflow-hidden',
+        WIDGET_SHADOW[content.shadow],
+        content.borderEnabled && 'border-solid border-hairline',
+      )}
+      style={{
+        borderRadius: radius,
+        borderWidth: content.borderEnabled ? content.borderWidth || '1px' : undefined,
+        borderColor: content.borderEnabled ? content.borderColor || undefined : undefined,
+      }}
+    >
+      <CmsImage
+        media={image}
+        alt={content.altText}
+        decorative={content.decorative}
+        title={content.imageTitle}
+        ratio={content.imageRatio}
+        fit={content.imageFit}
+        position={content.imagePosition}
+        width="100%"
+        sizes={sizes}
+        placeholder
+      />
+    </div>
+  );
+
+  const linked = href ? (
+    <Link
+      href={href}
+      className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      style={{ borderRadius: radius }}
+      // A link needs a name: an image with no alt gives it none.
+      aria-label={alt ? undefined : content.imageTitle.trim() || caption || undefined}
+      {...(content.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
+      {picture}
+    </Link>
+  ) : (
+    picture
+  );
+
+  const frameClass = cn(
+    'cms-image-widget',
+    full && 'cms-image-widget--full',
+    !full && content.alignment === 'left' && 'mr-auto',
+    !full && content.alignment === 'right' && 'ml-auto',
+    !full && content.alignment === 'center' && 'mx-auto',
+  );
+
+  if (!caption) {
+    return (
+      <div className={frameClass} style={vars as React.CSSProperties}>
+        {linked}
+      </div>
+    );
+  }
+
+  return (
+    <figure className={frameClass} style={vars as React.CSSProperties}>
+      {linked}
+      <figcaption
+        className={cn(
+          'mt-3 text-sm leading-relaxed',
+          ctx.inverted ? 'text-white/75' : 'text-muted',
+          content.captionAlign === 'left' && 'text-left',
+          content.captionAlign === 'center' && 'text-center',
+          content.captionAlign === 'right' && 'text-right',
+        )}
+      >
+        {caption}
+      </figcaption>
+    </figure>
   );
 }
 

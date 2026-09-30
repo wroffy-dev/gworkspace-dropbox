@@ -73,7 +73,7 @@ export default async function PreviewRender({ params }: { params: Promise<{ id: 
       ) : null}
 
       <main>
-        <SectionList sections={page.sections} country={country} />
+        <SectionList sections={page.sections} country={country} preview />
       </main>
     </>
   );

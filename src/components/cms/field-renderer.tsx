@@ -42,32 +42,52 @@ export function FieldList({
   fields,
   values,
   onChange,
+  onChangeMany,
   idPrefix,
 }: {
   fields: FieldDescriptor[];
   values: FieldValues;
   onChange: (name: string, value: unknown) => void;
+  /**
+   * Several fields in one change — the artwork control writes an image and an
+   * icon together. Without it the fields are set one call at a time, which is
+   * only right for a parent that updates from its latest state.
+   */
+  onChangeMany?: (patch: Record<string, unknown>) => void;
   idPrefix: string;
 }) {
+  const changeMany =
+    onChangeMany ??
+    ((patch: Record<string, unknown>) => {
+      for (const [name, value] of Object.entries(patch)) onChange(name, value);
+    });
+  const visible = fields.filter((field) => isFieldVisible(field, values));
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {fields
-        .filter((field) => isFieldVisible(field, values))
-        .map((field) => (
-          <div
-            key={field.name}
-            className={cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])}
-          >
+      {visible.map((field, index) => (
+        <React.Fragment key={field.name}>
+          {field.group && field.group !== visible[index - 1]?.group ? (
+            <h3
+              className={cn(
+                'text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2',
+                index > 0 && 'mt-2 border-t border-hairline pt-4',
+              )}
+            >
+              {field.group}
+            </h3>
+          ) : null}
+          <div className={cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])}>
             <FieldControl
               field={field}
               value={readFieldPath(values, field.name)}
               onChange={(value) => onChange(field.name, value)}
               siblings={values}
-              onChangeSibling={onChange}
+              onChangeFields={changeMany}
               id={`${idPrefix}-${field.name}`}
             />
           </div>
-        ))}
+        </React.Fragment>
+      ))}
     </div>
   );
 }
@@ -77,7 +97,7 @@ function FieldControl({
   value,
   onChange,
   siblings,
-  onChangeSibling,
+  onChangeFields,
   id,
 }: {
   field: FieldDescriptor;
@@ -90,7 +110,7 @@ function FieldControl({
    * depending on which source was picked, and those are two fields.
    */
   siblings?: FieldValues;
-  onChangeSibling?: (name: string, value: unknown) => void;
+  onChangeFields?: (patch: Record<string, unknown>) => void;
   id: string;
 }) {
   switch (field.kind) {
@@ -192,7 +212,7 @@ function FieldControl({
 
     case 'media': {
       const iconField = field.iconField;
-      if (iconField && onChangeSibling) {
+      if (iconField && onChangeFields) {
         const icon = readFieldPath(siblings ?? {}, iconField);
         return (
           <Field label={field.label} hint={field.help}>
@@ -201,8 +221,11 @@ function FieldControl({
               label={field.label}
               mediaId={typeof value === 'string' ? value : null}
               icon={typeof icon === 'string' ? icon : ''}
-              onChangeMedia={onChange}
-              onChangeIcon={(next) => onChangeSibling(iconField, next)}
+              onChangeMedia={(next) => onChangeFields({ [field.name]: next })}
+              onChangeIcon={(next) => onChangeFields({ [iconField]: next })}
+              onChange={(next) =>
+                onChangeFields({ [field.name]: next.mediaId, [iconField]: next.icon })
+              }
             />
           </Field>
         );
@@ -440,6 +463,10 @@ function Repeater({
     commit(items.map((item, i) => (i === index ? { ...item, [name]: fieldValue } : item)));
   };
 
+  const updateMany = (index: number, patch: Record<string, unknown>) => {
+    commit(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  };
+
   return (
     <fieldset className="rounded-lg border border-hairline p-3">
       <legend className="px-1 text-sm font-medium text-content">{field.label}</legend>
@@ -516,6 +543,7 @@ function Repeater({
                         fields={field.fields}
                         values={item}
                         onChange={(name, fieldValue) => update(index, name, fieldValue)}
+                        onChangeMany={(patch) => updateMany(index, patch)}
                         idPrefix={`${idPrefix}-${index}`}
                       />
                     )}

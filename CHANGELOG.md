@@ -12,6 +12,22 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Image section** (Page Builder → Add section → Cards & media → Image): one
+  image from the Media Library with its own alt text (blank uses the library's),
+  a decorative switch, optional title and caption (`<figure>`/`<figcaption>`).
+  - **Layout**: left, centre, right or full-width alignment; width presets
+    (auto, 25–100%) or a custom length per desktop, tablet and mobile (mobile
+    defaults to 100%); optional maximum width; aspect ratio, fit and focal
+    point. The Design panel's responsive Image width overrides the widths.
+  - **Link**: the whole image can link anywhere, optionally in a new tab
+    (`rel="noopener noreferrer"`), through the same safe-URL check as buttons.
+  - **Appearance**: corner radius presets or a custom radius, optional border
+    (width, colour) and shadow. Every length and colour is validated; nothing
+    reaches the page as raw CSS.
+  - A missing or deleted image shows an empty slot in the admin preview and
+    nothing to visitors. Stored in `PageSection.content`; no migration.
+  - Block editor fields may now carry a `group`, shown as a subheading.
+
 - **Cities** (Admin → Locations → Cities, `/admin/cities`): local address
   spaces inside a market — `/delhi` in the root market, `/ae/dubai` in the UAE.
   Country stays the market; a city holds a slug, an optional region, contact
@@ -46,6 +62,16 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Fixed
 
+- **Icon cards and Icon box: an uploaded image now sticks.** Choosing a
+  Media Library image (PNG, SVG or any other) for a card that already had an
+  icon wrote the image and then cleared the icon from the same stale values,
+  so the image was dropped. The artwork picker now writes both in one change.
+- **SVG uploads from design tools are accepted.** The upload check read any
+  attribute with "on" inside its name as an event handler, so every Inkscape
+  file (`standalone="no"`) and attributes like `exponent` were refused. It now
+  matches only attribute names that begin with "on"; scripts, event handlers,
+  embedded HTML and remote references are still rejected.
+- SVGs show whole in the media picker instead of being cropped.
 - **A deleted brand or product category still showed on product pages**, in
   the product's structured data and in its SEO score. Deleting one puts it in
   the recycle bin with its products still pointing at it, so restoring it

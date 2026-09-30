@@ -53,7 +53,11 @@ export function MediaPicker({
             <img
               src={selected.url}
               alt={selected.altText ?? ''}
-              className="h-14 w-14 shrink-0 rounded-md border border-hairline object-cover"
+              className={cn(
+                'h-14 w-14 shrink-0 rounded-md border border-hairline',
+                // An icon is drawn whole; a photo fills the square.
+                selected.mimeType === 'image/svg+xml' ? 'object-contain p-1.5' : 'object-cover',
+              )}
             />
           ) : (
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-muted/10 text-xs font-medium text-muted">
@@ -250,7 +254,10 @@ export function MediaBrowser({
                       src={item.url}
                       alt={item.altText ?? ''}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className={cn(
+                        'h-full w-full',
+                        item.mimeType === 'image/svg+xml' ? 'object-contain p-4' : 'object-cover',
+                      )}
                     />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center text-xs font-medium text-muted">
