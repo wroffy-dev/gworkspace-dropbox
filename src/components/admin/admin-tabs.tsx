@@ -14,12 +14,20 @@ export function AdminTabs({
   active,
   onChange,
   className,
+  variant = 'underline',
 }: {
   tabs: AdminTab[];
   active: string;
   onChange: (id: string) => void;
   className?: string;
+  /**
+   * `glass` draws a segmented control with a frosted active tab — for the
+   * section editor, where the tabs sit in a compact panel. Everywhere else
+   * keeps the underline.
+   */
+  variant?: 'underline' | 'glass';
 }) {
+  const glass = variant === 'glass';
   const refs = React.useRef<Record<string, HTMLButtonElement | null>>({});
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -40,7 +48,11 @@ export function AdminTabs({
       role="tablist"
       aria-orientation="horizontal"
       onKeyDown={onKeyDown}
-      className={cn('scroll-x flex items-center gap-1 border-b border-hairline', className)}
+      className={cn(
+        'scroll-x flex items-center gap-1',
+        glass ? 'max-w-full rounded-xl bg-muted/[0.07] p-1' : 'border-b border-hairline',
+        className,
+      )}
     >
       {tabs.map((tab) => {
         const selected = tab.id === active;
@@ -58,9 +70,15 @@ export function AdminTabs({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             className={cn(
-              'relative shrink-0 whitespace-nowrap px-3 py-2.5 text-sm transition-colors',
+              'relative shrink-0 whitespace-nowrap text-sm transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1',
-              selected ? 'font-medium text-brand' : 'text-muted hover:text-content',
+              glass
+                ? cn(
+                    // Tighter on a phone so four tabs fit the editor without scrolling.
+                    'min-h-[2.25rem] rounded-lg border border-transparent px-2 py-1.5 text-[0.8125rem] sm:px-3 sm:text-sm',
+                    selected ? 'liquid-tab-active font-medium text-content' : 'text-muted hover:text-content',
+                  )
+                : cn('px-3 py-2.5', selected ? 'font-medium text-brand' : 'text-muted hover:text-content'),
             )}
           >
             <span className="flex items-center gap-1.5">
@@ -71,13 +89,15 @@ export function AdminTabs({
                 </span>
               ) : null}
             </span>
-            <span
-              aria-hidden="true"
-              className={cn(
-                'absolute inset-x-1 -bottom-px h-0.5 rounded-full transition-colors',
-                selected ? 'bg-brand' : 'bg-transparent',
-              )}
-            />
+            {glass ? null : (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'absolute inset-x-1 -bottom-px h-0.5 rounded-full transition-colors',
+                  selected ? 'bg-brand' : 'bg-transparent',
+                )}
+              />
+            )}
           </button>
         );
       })}

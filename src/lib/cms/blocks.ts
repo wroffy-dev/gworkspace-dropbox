@@ -474,10 +474,31 @@ export const IMAGE_WIDGET_WIDTHS = [
 ] as const;
 const imageWidgetWidth = z.enum(IMAGE_WIDGET_WIDTHS);
 
-const imageWidgetSchema = z.object({
+export const IMAGE_WIDGET_ALIGNMENTS = ['left', 'center', 'right', 'full'] as const;
+/** A tablet or mobile alignment; `inherit` keeps the larger screen's. */
+const breakpointAlignment = z
+  .enum(['inherit', ...IMAGE_WIDGET_ALIGNMENTS])
+  .catch('inherit')
+  .default('inherit');
+
+/**
+ * The first sections of this block stored their alt text as `altText`. Every
+ * other block calls it `imageAlt`, so this one does too now, and a section
+ * saved before the rename is read under the new name — then written back that
+ * way the next time it is saved.
+ */
+function renameLegacyAlt(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const record = raw as Record<string, unknown>;
+  if (record.imageAlt !== undefined || typeof record.altText !== 'string') return raw;
+  const { altText, ...rest } = record;
+  return { ...rest, imageAlt: altText };
+}
+
+const imageWidgetFields = z.object({
   imageId: z.string().nullable().default(null),
   /** Blank falls back to the media library's alt text. */
-  altText: z.string().max(200).default(''),
+  imageAlt: z.string().max(200).default(''),
   /** Drawn with an empty alt, so screen readers skip it. */
   decorative: z.boolean().catch(false).default(false),
   imageTitle: z.string().max(200).default(''),
@@ -487,10 +508,9 @@ const imageWidgetSchema = z.object({
     .catch('center')
     .default('center'),
 
-  alignment: z
-    .enum(['left', 'center', 'right', 'full'])
-    .catch('center')
-    .default('center'),
+  alignment: z.enum(IMAGE_WIDGET_ALIGNMENTS).catch('center').default('center'),
+  tabletAlignment: breakpointAlignment,
+  mobileAlignment: breakpointAlignment,
   width: imageWidgetWidth.catch('100').default('100'),
   customWidth: imageLength,
   /** `inherit` keeps the larger screen's width. */
@@ -515,8 +535,8 @@ const imageWidgetSchema = z.object({
 
   borderRadius: z
     .enum(['none', 'sm', 'md', 'lg', 'xl', 'full', 'custom'])
-    .catch('none')
-    .default('none'),
+    .catch('md')
+    .default('md'),
   customRadius: imageLength,
   borderEnabled: z.boolean().catch(false).default(false),
   borderWidth: imageLength,
@@ -531,6 +551,8 @@ const imageWidgetSchema = z.object({
     .catch('none')
     .default('none'),
 });
+
+const imageWidgetSchema = z.preprocess(renameLegacyAlt, imageWidgetFields);
 
 const iconBoxSchema = z.object({
   icon: z.string().max(40).default('star'),
@@ -699,6 +721,15 @@ const ALIGN_OPTIONS = [
 /** Files a run of fields under one editor subheading. */
 const inGroup = (group: string, fields: FieldDescriptor[]): FieldDescriptor[] =>
   fields.map((field) => ({ ...field, group }));
+
+const IMAGE_ALIGN_OPTIONS = [
+  { label: 'Left', value: 'left' },
+  { label: 'Centre', value: 'center' },
+  { label: 'Right', value: 'right' },
+  { label: 'Full width', value: 'full' },
+];
+
+const CAPTION_ALIGN_OPTIONS = IMAGE_ALIGN_OPTIONS.filter((option) => option.value !== 'full');
 
 const IMAGE_WIDTH_OPTIONS = [
   { label: 'Auto (natural size)', value: 'auto' },
@@ -1648,47 +1679,40 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
     type: 'imageWidget',
     design: ['image'],
     label: 'Image',
-    description: 'Display a fully configurable image.',
+    description: 'Display a fully configurable responsive image.',
     group: 'Cards & media',
     icon: 'image',
     surfaces: ['page'],
     schema: imageWidgetSchema,
     fields: [
       ...inGroup('Image', [
-        { kind: 'media', name: 'imageId', label: 'Image' },
+        {
+          kind: 'media',
+          name: 'imageId',
+          label: 'Image',
+          help: 'Choose from the Media Library, or upload a new file there.',
+        },
+      ]),
+      ...inGroup('SEO & Accessibility', [
         {
           kind: 'text',
-          name: 'altText',
+          name: 'imageAlt',
           label: 'Alt text',
-          help: 'Describes the image for screen readers. Blank uses the Media Library alt text.',
+          help: 'Describes the image for screen readers and search engines. Blank uses the Media Library alt text.',
         },
         {
           kind: 'boolean',
           name: 'decorative',
           label: 'Decorative image',
           help: 'Adds nothing to the page’s meaning, so screen readers skip it.',
-          width: 'half',
         },
-        {
-          kind: 'text',
-          name: 'imageTitle',
-          label: 'Title',
-          help: 'Optional tooltip.',
-          width: 'half',
-        },
-        {
-          kind: 'textarea',
-          name: 'caption',
-          label: 'Caption',
-          rows: 2,
-          help: 'Optional.',
-        },
+        { kind: 'text', name: 'imageTitle', label: 'Image title', help: 'Optional tooltip.' },
+        { kind: 'textarea', name: 'caption', label: 'Caption', rows: 2, help: 'Optional.' },
         {
           kind: 'select',
           name: 'captionAlign',
           label: 'Caption alignment',
-          width: 'half',
-          options: [...ALIGN_OPTIONS, { label: 'Right', value: 'right' }],
+          options: CAPTION_ALIGN_OPTIONS,
         },
       ]),
       ...inGroup('Layout', [
@@ -1697,74 +1721,31 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
           name: 'alignment',
           label: 'Alignment',
           width: 'half',
-          options: [
-            ...ALIGN_OPTIONS,
-            { label: 'Right', value: 'right' },
-            { label: 'Full width', value: 'full' },
-          ],
+          options: IMAGE_ALIGN_OPTIONS,
         },
         {
           kind: 'select',
           name: 'width',
-          label: 'Width (desktop)',
+          label: 'Width',
           width: 'half',
           options: IMAGE_WIDTH_OPTIONS,
-          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
+          help: 'On desktop. Tablet and mobile follow unless set under Responsive.',
         },
         {
           kind: 'length',
           name: 'customWidth',
-          label: 'Custom width (desktop)',
+          label: 'Custom width',
           width: 'half',
           placeholder: '480px',
           showWhen: { field: 'width', equals: ['custom'] },
         },
         {
-          kind: 'select',
-          name: 'tabletWidth',
-          label: 'Width (tablet)',
-          width: 'half',
-          options: [
-            { label: 'Same as desktop', value: 'inherit' },
-            ...IMAGE_WIDTH_OPTIONS,
-          ],
-          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
-        },
-        {
-          kind: 'length',
-          name: 'tabletCustomWidth',
-          label: 'Custom width (tablet)',
-          width: 'half',
-          placeholder: '90%',
-          showWhen: { field: 'tabletWidth', equals: ['custom'] },
-        },
-        {
-          kind: 'select',
-          name: 'mobileWidth',
-          label: 'Width (mobile)',
-          width: 'half',
-          options: [
-            { label: 'Same as tablet', value: 'inherit' },
-            ...IMAGE_WIDTH_OPTIONS,
-          ],
-          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
-        },
-        {
-          kind: 'length',
-          name: 'mobileCustomWidth',
-          label: 'Custom width (mobile)',
-          width: 'half',
-          placeholder: '100%',
-          showWhen: { field: 'mobileWidth', equals: ['custom'] },
-        },
-        {
           kind: 'length',
           name: 'maxWidth',
-          label: 'Maximum width',
+          label: 'Max width',
           width: 'half',
           placeholder: '1200px',
           help: 'Optional.',
-          showWhen: { field: 'alignment', equals: ['left', 'center', 'right'] },
         },
         {
           kind: 'select',
@@ -1773,13 +1754,7 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
           width: 'half',
           options: RATIO_OPTIONS,
         },
-        {
-          kind: 'select',
-          name: 'imageFit',
-          label: 'Image fit',
-          width: 'half',
-          options: FIT_OPTIONS,
-        },
+        { kind: 'select', name: 'imageFit', label: 'Image fit', width: 'half', options: FIT_OPTIONS },
         {
           kind: 'select',
           name: 'imagePosition',
@@ -1788,20 +1763,61 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
           options: POSITION_OPTIONS,
         },
       ]),
+      ...inGroup('Responsive', [
+        {
+          kind: 'select',
+          name: 'tabletAlignment',
+          label: 'Tablet alignment',
+          width: 'half',
+          options: [{ label: 'Same as desktop', value: 'inherit' }, ...IMAGE_ALIGN_OPTIONS],
+        },
+        {
+          kind: 'select',
+          name: 'tabletWidth',
+          label: 'Tablet width',
+          width: 'half',
+          options: [{ label: 'Same as desktop', value: 'inherit' }, ...IMAGE_WIDTH_OPTIONS],
+        },
+        {
+          kind: 'length',
+          name: 'tabletCustomWidth',
+          label: 'Custom tablet width',
+          width: 'half',
+          placeholder: '90%',
+          showWhen: { field: 'tabletWidth', equals: ['custom'] },
+        },
+        {
+          kind: 'select',
+          name: 'mobileAlignment',
+          label: 'Mobile alignment',
+          width: 'half',
+          options: [{ label: 'Same as tablet', value: 'inherit' }, ...IMAGE_ALIGN_OPTIONS],
+        },
+        {
+          kind: 'select',
+          name: 'mobileWidth',
+          label: 'Mobile width',
+          width: 'half',
+          options: [{ label: 'Same as tablet', value: 'inherit' }, ...IMAGE_WIDTH_OPTIONS],
+        },
+        {
+          kind: 'length',
+          name: 'mobileCustomWidth',
+          label: 'Custom mobile width',
+          width: 'half',
+          placeholder: '100%',
+          showWhen: { field: 'mobileWidth', equals: ['custom'] },
+        },
+      ]),
       ...inGroup('Link', [
         {
           kind: 'url',
           name: 'linkUrl',
           label: 'Link URL',
-          help: 'Optional. Makes the image clickable.',
+          help: 'Optional. Makes the whole image clickable.',
           placeholder: '/contact or https://…',
         },
-        {
-          kind: 'boolean',
-          name: 'openInNewTab',
-          label: 'Open in new tab',
-          width: 'half',
-        },
+        { kind: 'boolean', name: 'openInNewTab', label: 'Open in new tab' },
       ]),
       ...inGroup('Appearance', [
         {
@@ -1814,7 +1830,7 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
             { label: 'Small', value: 'sm' },
             { label: 'Medium', value: 'md' },
             { label: 'Large', value: 'lg' },
-            { label: 'Extra large', value: 'xl' },
+            { label: 'XL', value: 'xl' },
             { label: 'Round (pill / circle)', value: 'full' },
             { label: 'Custom', value: 'custom' },
           ],
@@ -1837,15 +1853,10 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
             { label: 'Small', value: 'sm' },
             { label: 'Medium', value: 'md' },
             { label: 'Large', value: 'lg' },
-            { label: 'Extra large', value: 'xl' },
+            { label: 'XL', value: 'xl' },
           ],
         },
-        {
-          kind: 'boolean',
-          name: 'borderEnabled',
-          label: 'Border',
-          width: 'half',
-        },
+        { kind: 'boolean', name: 'borderEnabled', label: 'Border' },
         {
           kind: 'length',
           name: 'borderWidth',
@@ -1859,7 +1870,7 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
           name: 'borderColor',
           label: 'Border colour',
           width: 'half',
-          help: 'Blank uses the theme’s hairline colour.',
+          help: 'Blank uses the theme’s border colour.',
           showWhen: { field: 'borderEnabled', equals: [true] },
         },
       ]),

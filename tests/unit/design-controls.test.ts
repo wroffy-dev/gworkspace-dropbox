@@ -41,18 +41,28 @@ function functionSource(source: string, name: string): string | null {
   return null;
 }
 
-/** What a block's renderer draws: its own body, and the helpers beside it that it uses. */
-function rendered(component: string): string {
+/** A function's source from whichever block file defines it. */
+function sourceAnywhere(name: string): string {
   for (const file of blockFiles) {
-    const own = functionSource(file, component);
-    if (!own) continue;
-    const helpers = [...own.matchAll(/<([A-Z][A-Za-z]+)/g)]
-      .map((match) => match[1]!)
-      .filter((tag) => tag !== component)
-      .map((tag) => functionSource(file, tag) ?? '');
-    return [own, ...helpers].join('\n');
+    const found = functionSource(file, name);
+    if (found) return found;
   }
   return '';
+}
+
+/**
+ * What a block's renderer draws: its own body, and the components it uses —
+ * beside it, or in another block file (the Image section draws through a
+ * frame it shares with the editor's preview).
+ */
+function rendered(component: string): string {
+  const own = sourceAnywhere(component);
+  if (!own) return '';
+  const helpers = [...own.matchAll(/<([A-Z][A-Za-z]+)/g)]
+    .map((match) => match[1]!)
+    .filter((tag) => tag !== component)
+    .map(sourceAnywhere);
+  return [own, ...helpers].join('\n');
 }
 
 const TYPES = [...renderer.matchAll(/case '([A-Za-z]+)':\s*return <([A-Za-z]+)/g)].map(

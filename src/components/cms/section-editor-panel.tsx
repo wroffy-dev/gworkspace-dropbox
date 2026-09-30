@@ -12,6 +12,7 @@ import { Field, Input } from '@/components/ui/field';
 import { FieldList, type FieldValues } from './field-renderer';
 import { writeFieldPath, writeFieldPaths } from '@/lib/cms/fields';
 import { DesignPanel } from './design-panel';
+import { CONTENT_EDITORS } from './content-editors';
 import type { BuilderSection } from './section-builder';
 
 /** Everything in this panel a person can change. */
@@ -182,6 +183,9 @@ export function SectionEditorPanel({
   }
 
   const dirty = state === 'dirty' || state === 'error';
+  // A block may bring its own Content tab (a preview beside its fields); the
+  // rest get the shared field list.
+  const ContentEditor = CONTENT_EDITORS[section.blockType] ?? FieldList;
   const formGroups = definition.formFields ?? [];
 
   const changed = !same(draft, saved);
@@ -219,13 +223,14 @@ export function SectionEditorPanel({
         ]}
         active={tab}
         onChange={setTab}
-        className="shrink-0 px-2"
+        variant="glass"
+        className="mx-2 mt-2.5 shrink-0 sm:mx-3"
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <fieldset disabled={!canEdit || state === 'saving'} className="space-y-4 p-3">
           <TabPanel id="content" active={tab} className="space-y-4">
-            <FieldList
+            <ContentEditor
               fields={definition.fields}
               values={content}
               idPrefix={`c-${section.id}`}

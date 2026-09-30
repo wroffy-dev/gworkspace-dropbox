@@ -73,6 +73,14 @@
   --btn-padding-x: 1.25rem;
   --btn-padding-y: 0.625rem;
   --btn-transform: none;
+
+  /*
+    Liquid Glass and shadow tokens. Channels, like the brand colours, so the
+    alpha stays in the class that uses them. A dark theme retunes the whole
+    glass family by overriding these two lines: a dark tint and a light ink.
+  */
+  --glass-tint: 255 255 255;
+  --shadow-ink: 15 23 42;
 }
 
 @layer components {
@@ -512,28 +520,192 @@
   }
 
   /*
-   * The Image section's frame. Its per-screen widths arrive as `--iw-*` from
-   * the block's content; the design panel's responsive Image width, when set,
-   * takes precedence. It never grows past its column, so no screen scrolls
-   * sideways.
+   * The Image section's frame.
+   *
+   * Width, maximum width and alignment arrive per screen size as `--iw-*`
+   * custom properties from the block's content (`imageWidgetVars`), so the
+   * breakpoints switch here without a script or a per-section stylesheet. The
+   * design panel's responsive Image width, when set, takes precedence — except
+   * over Full width, which fills the column whatever else is set. It never
+   * grows past its column, so no screen scrolls sideways.
    */
   .cms-image-widget {
-    width: var(--sec-img-w, var(--iw-w, 100%));
-    max-width: min(100%, var(--iw-max-w, 100%));
+    width: var(--iw-fw, var(--sec-img-w, var(--iw-w, 100%)));
+    max-width: min(100%, var(--iw-max, 100%));
+    margin-left: var(--iw-ml, auto);
+    margin-right: var(--iw-mr, auto);
   }
   @media (max-width: 1023px) {
     .cms-image-widget {
-      width: var(--sec-img-w, var(--iw-w-tablet, var(--iw-w, 100%)));
+      width: var(--iw-fw-t, var(--sec-img-w, var(--iw-w-t, 100%)));
+      max-width: min(100%, var(--iw-max-t, 100%));
+      margin-left: var(--iw-ml-t, auto);
+      margin-right: var(--iw-mr-t, auto);
     }
   }
   @media (max-width: 767px) {
     .cms-image-widget {
-      width: var(--sec-img-w, var(--iw-w-mobile, var(--iw-w-tablet, var(--iw-w, 100%))));
+      width: var(--iw-fw-m, var(--sec-img-w, var(--iw-w-m, 100%)));
+      max-width: min(100%, var(--iw-max-m, 100%));
+      margin-left: var(--iw-ml-m, auto);
+      margin-right: var(--iw-mr-m, auto);
     }
   }
-  .cms-image-widget.cms-image-widget--full {
-    width: 100%;
-    max-width: 100%;
+
+  /*
+   * Soft, low shadows for CMS media. Layered — a tight contact shadow under a
+   * wide, faint ambient one — so an image lifts off the page without looking
+   * like a floating card.
+   */
+  .cms-shadow-sm {
+    box-shadow: 0 1px 2px rgb(var(--shadow-ink) / 0.06), 0 2px 8px rgb(var(--shadow-ink) / 0.04);
+  }
+  .cms-shadow-md {
+    box-shadow: 0 2px 4px rgb(var(--shadow-ink) / 0.05), 0 8px 24px rgb(var(--shadow-ink) / 0.07);
+  }
+  .cms-shadow-lg {
+    box-shadow: 0 4px 8px rgb(var(--shadow-ink) / 0.05), 0 16px 40px rgb(var(--shadow-ink) / 0.09);
+  }
+  .cms-shadow-xl {
+    box-shadow: 0 8px 16px rgb(var(--shadow-ink) / 0.06), 0 28px 64px rgb(var(--shadow-ink) / 0.12);
+  }
+
+  /*
+   * A field grid sized by its editor rather than the window: one column in a
+   * narrow editor, two once there is room. Used where the editor shares its
+   * row with a preview, so a wide window does not squeeze two selects into a
+   * narrow column.
+   */
+  .cms-field-container {
+    container: cms-fields / inline-size;
+  }
+  .cms-field-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cms-field--full,
+  .cms-field--half {
+    min-width: 0;
+  }
+  @container cms-fields (min-width: 26rem) {
+    .cms-field-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .cms-field--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /*
+   * The Image section's editor: preview above the controls, or beside them
+   * (roughly 55 / 45) once the editor itself is wide enough — measured on the
+   * editor, not the window, because the section list takes part of the row.
+   */
+  .cms-iw-editor {
+    container: cms-iw / inline-size;
+  }
+  .cms-iw-editor__layout {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @container cms-iw (min-width: 46rem) {
+    .cms-iw-editor__layout {
+      grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+      align-items: start;
+    }
+    .cms-iw-editor__preview {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+  }
+  /* What the glass frosts: a faint wash of the brand colours, nothing busier. */
+  .cms-iw-backdrop {
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgb(var(--brand-primary) / 0.12), transparent 60%),
+      radial-gradient(110% 80% at 100% 100%, rgb(var(--brand-accent1) / 0.12), transparent 55%),
+      rgb(var(--admin-workspace-bg));
+  }
+
+  /*
+   * Liquid Glass — the admin's frosted surfaces.
+   *
+   * Four classes, used sparingly: the image editor's preview panel, the section
+   * editor's active tab, and the media picker. Never inputs, table rows or whole
+   * pages — frosting everything makes the CMS look blurry, not premium, and
+   * readability comes first. Text on glass keeps the ordinary content colours.
+   *
+   *   .liquid-glass        floating panels, dialogs, popovers
+   *   .liquid-glass-soft   light secondary areas
+   *   .liquid-glass-panel  a large settings or preview panel
+   *   .liquid-tab-active   the selected tab in a glass tab strip
+   */
+  .liquid-glass {
+    background: rgb(var(--glass-tint) / 0.58);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgb(var(--glass-tint) / 0.55);
+    box-shadow:
+      0 8px 32px rgb(var(--shadow-ink) / 0.08),
+      inset 0 1px 0 rgb(var(--glass-tint) / 0.7);
+    border-radius: 20px;
+  }
+  .liquid-glass-soft {
+    background: rgb(var(--glass-tint) / 0.42);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border: 1px solid rgb(var(--glass-tint) / 0.4);
+    box-shadow: 0 4px 18px rgb(var(--shadow-ink) / 0.05);
+    border-radius: 14px;
+  }
+  .liquid-glass-panel {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--glass-tint) / 0.72),
+      rgb(var(--glass-tint) / 0.46)
+    );
+    backdrop-filter: blur(28px) saturate(170%);
+    -webkit-backdrop-filter: blur(28px) saturate(170%);
+    border: 1px solid rgb(var(--glass-tint) / 0.52);
+    box-shadow:
+      0 16px 40px rgb(var(--shadow-ink) / 0.07),
+      inset 0 1px 0 rgb(var(--glass-tint) / 0.75);
+    border-radius: 22px;
+  }
+  .liquid-tab-active {
+    background: rgb(var(--glass-tint) / 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgb(var(--glass-tint) / 0.55);
+    box-shadow:
+      0 4px 14px rgb(var(--shadow-ink) / 0.06),
+      inset 0 1px 0 rgb(var(--glass-tint) / 0.8);
+  }
+
+  /*
+   * Without a backdrop filter there is nothing to frost, and a half-transparent
+   * panel over busy content only costs contrast — so fall back to a solid one.
+   */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass,
+    .liquid-glass-soft,
+    .liquid-glass-panel,
+    .liquid-tab-active {
+      background: rgb(var(--glass-tint) / 0.96);
+    }
+  }
+  /* Reduced transparency is an explicit request for exactly that. */
+  @media (prefers-reduced-transparency: reduce) {
+    .liquid-glass,
+    .liquid-glass-soft,
+    .liquid-glass-panel,
+    .liquid-tab-active {
+      background: rgb(var(--glass-tint) / 0.96);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 
   /* Global button tokens from Settings -> Website design. */

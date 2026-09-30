@@ -12,6 +12,22 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Image section editor with live preview** (Pages → a page → an Image
+  section). The Content tab shows the image beside its controls — side by side
+  when the editor is wide, stacked on tablets and phones — and redraws as you
+  edit, for Desktop, Tablet or Mobile. Controls are grouped (Image, SEO &
+  Accessibility, Layout, Responsive, Link, Appearance) into sections that open
+  and close. The preview draws with the same component as the published page.
+  - Alignment can now differ per screen size, like width already could.
+  - Corner radii come from the site's layout tokens; new sections start at
+    Medium. Shadows are softer and layered.
+  - The alt text field is stored as `imageAlt`, like every other block's;
+    sections saved with the old `altText` are still read.
+- **Liquid Glass styles**: `.liquid-glass`, `.liquid-glass-soft`,
+  `.liquid-glass-panel` and `.liquid-tab-active`, built on two tokens so a
+  dark theme can retune them. Used only on the section editor's tabs, the image
+  preview panel and the media picker, with a solid fallback where the browser
+  cannot blur and for reduced transparency.
 - **Image section** (Page Builder → Add section → Cards & media → Image): one
   image from the Media Library with its own alt text (blank uses the library's),
   a decorative switch, optional title and caption (`<figure>`/`<figcaption>`).
