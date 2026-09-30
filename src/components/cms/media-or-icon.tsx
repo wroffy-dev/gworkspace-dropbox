@@ -23,6 +23,7 @@ export function MediaOrIcon({
   icon,
   onChangeMedia,
   onChangeIcon,
+  onChange,
   label,
   id,
 }: {
@@ -30,6 +31,13 @@ export function MediaOrIcon({
   icon: string;
   onChangeMedia: (id: string | null) => void;
   onChangeIcon: (name: string) => void;
+  /**
+   * Both values in one change. A caller that builds its next state from the
+   * render it is in — rather than from the latest state — must use this: two
+   * separate calls would each start from the same old values, and the second
+   * would put back what the first changed, so a chosen image never stuck.
+   */
+  onChange?: (next: { mediaId: string | null; icon: string }) => void;
   label: string;
   id?: string;
 }) {
@@ -85,8 +93,9 @@ export function MediaOrIcon({
           label={label}
           value={mediaId}
           onChange={(next) => {
-            onChangeMedia(next);
             // One artwork: choosing a picture puts the icon down.
+            if (onChange) return onChange({ mediaId: next, icon: next ? '' : icon });
+            onChangeMedia(next);
             if (next) onChangeIcon('');
           }}
         />
@@ -95,6 +104,7 @@ export function MediaOrIcon({
           id={id}
           value={icon}
           onChange={(next) => {
+            if (onChange) return onChange({ mediaId: next ? null : mediaId, icon: next });
             onChangeIcon(next);
             if (next) onChangeMedia(null);
           }}

@@ -184,6 +184,17 @@ export function writeFieldPath(
   return next;
 }
 
+/** `writeFieldPath` for several fields at once, in one new object. */
+export function writeFieldPaths(
+  values: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.entries(patch).reduce(
+    (next, [name, value]) => writeFieldPath(next, name, value),
+    values,
+  );
+}
+
 export function isFieldVisible(field: FieldDescriptor, values: Record<string, unknown>): boolean {
   if (!field.showWhen) return true;
   const current = readFieldPath(values, field.showWhen.field);

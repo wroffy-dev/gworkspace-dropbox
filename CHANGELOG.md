@@ -62,6 +62,16 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Fixed
 
+- **Icon cards and Icon box: an uploaded image now sticks.** Choosing a
+  Media Library image (PNG, SVG or any other) for a card that already had an
+  icon wrote the image and then cleared the icon from the same stale values,
+  so the image was dropped. The artwork picker now writes both in one change.
+- **SVG uploads from design tools are accepted.** The upload check read any
+  attribute with "on" inside its name as an event handler, so every Inkscape
+  file (`standalone="no"`) and attributes like `exponent` were refused. It now
+  matches only attribute names that begin with "on"; scripts, event handlers,
+  embedded HTML and remote references are still rejected.
+- SVGs show whole in the media picker instead of being cropped.
 - **A deleted brand or product category still showed on product pages**, in
   the product's structured data and in its SEO score. Deleting one puts it in
   the recycle bin with its products still pointing at it, so restoring it

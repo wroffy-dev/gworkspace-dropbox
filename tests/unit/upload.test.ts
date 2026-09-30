@@ -187,6 +187,22 @@ describe('validateUpload', () => {
     expect(validateUpload('image/svg+xml', svg, svg.byteLength).ok).toBe(true);
   });
 
+  it('accepts the SVGs design tools export', () => {
+    const exported = [
+      // Inkscape: the XML declaration carries standalone="no".
+      '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" inkscape:version="1.2"><path d="M0 0h24v24H0z" inkscape:connector-curvature="0"/></svg>',
+      // Illustrator, with its generator comment, DOCTYPE and style block.
+      '<?xml version="1.0" encoding="utf-8"?>\n<!-- Generator: Adobe Illustrator 27.0.0 -->\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve"><style type="text/css">.st0{fill:#0061FE;}</style><path class="st0" d="M6 2l6 4-6 4-6-4z"/></svg>',
+      // Figma, and ordinary attributes with "on" inside the name.
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" contentScriptType="text/ecmascript"><path d="M12 2L2 7" stroke="#000" stroke-linejoin="round"/><feFuncA type="gamma" exponent="2"/></svg>',
+    ];
+    for (const source of exported) {
+      const buffer = Buffer.from(source);
+      const result = validateUpload('image/svg+xml', buffer, buffer.byteLength);
+      expect(result.ok, `must accept: ${source.slice(0, 60)}`).toBe(true);
+    }
+  });
+
   it('rejects the ways an SVG can smuggle script past a naive check', () => {
     const hostile = [
       // Split across an XML comment.
@@ -196,6 +212,9 @@ describe('validateUpload', () => {
       // Event handler rather than a script element.
       '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"></svg>',
       '<svg xmlns="http://www.w3.org/2000/svg"><rect onclick="alert(1)"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect x="1"onclick="alert(1)"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events"><rect ev:onclick="alert(1)"/></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect\n\tONMOUSEOVER = "alert(1)"/></svg>',
       // Embedded HTML and frames.
       '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><body/></foreignObject></svg>',
       '<svg xmlns="http://www.w3.org/2000/svg"><iframe src="x"></iframe></svg>',
