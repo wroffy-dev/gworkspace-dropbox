@@ -362,6 +362,11 @@ const PAGE_EXTRACTORS: Record<string, Extractor> = {
       decorative: str(content.layout) === 'backgroundImage',
     });
   },
+  imageWidget(c, content) {
+    c.media(content.imageId, content.altText, { decorative: content.decorative === true });
+    c.paragraph(content.caption);
+    c.link(content.linkUrl, content.imageTitle || content.altText);
+  },
   iconBox(c, content) {
     c.media(content.imageId, '', { decorative: true });
     c.heading(3, content.heading);

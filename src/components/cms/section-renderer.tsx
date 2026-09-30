@@ -25,6 +25,7 @@ import type {
   ImageCardsContent,
   IconCardsContent,
   ImageBoxContent,
+  ImageWidgetContent,
   IconBoxContent,
   ListSectionContent,
   HeadingTextContent,
@@ -93,6 +94,7 @@ import {
   ImageCardsBlock,
   IconCardsBlock,
   ImageBoxBlock,
+  ImageWidgetBlock,
   IconBoxBlock,
   ListSectionBlock,
   HeadingTextBlock,
@@ -213,6 +215,8 @@ async function BlockBody({ section, ctx }: { section: RenderableSection; ctx: Bl
       return <IconCardsBlock content={parse<IconCardsContent>()} ctx={ctx} />;
     case 'imageBox':
       return <ImageBoxBlock content={parse<ImageBoxContent>()} ctx={ctx} />;
+    case 'imageWidget':
+      return <ImageWidgetBlock content={parse<ImageWidgetContent>()} ctx={ctx} />;
     case 'iconBox':
       return <IconBoxBlock content={parse<IconBoxContent>()} ctx={ctx} />;
     case 'listSection':
@@ -325,6 +329,7 @@ export async function SectionRenderer({
   product,
   country: providedCountry,
   container = true,
+  preview = false,
 }: {
   section: RenderableSection;
   isFirst?: boolean;
@@ -341,6 +346,8 @@ export async function SectionRenderer({
    * its own width, so its sections opt out and fill the column instead.
    */
   container?: boolean;
+  /** Rendering in the admin preview, where blocks may mark what is missing. */
+  preview?: boolean;
 }) {
   const design = providedDesign ?? parseSectionDesign(section.settings);
   const country = providedCountry ?? blog?.country ?? product?.country ?? (await getRequestCountry());
@@ -359,6 +366,7 @@ export async function SectionRenderer({
     design,
     blog,
     product,
+    preview,
   };
 
   /*
@@ -424,6 +432,7 @@ export async function SectionList({
   country: providedCountry,
   container = true,
   allowFirst = true,
+  preview = false,
 }: {
   sections: RenderableSection[];
   blog?: BlogRenderContext;
@@ -440,6 +449,8 @@ export async function SectionList({
    * second `<h1>` just by being first in its list.
    */
   allowFirst?: boolean;
+  /** Rendering in the admin preview, where blocks may mark what is missing. */
+  preview?: boolean;
 }) {
   const visible = sections.filter((s) => s.isVisible).sort((a, b) => a.sortOrder - b.sortOrder);
   const anchors = resolveAnchors(visible);
@@ -458,6 +469,7 @@ export async function SectionList({
           product={product}
           country={country}
           container={container}
+          preview={preview}
         />
       ))}
     </>

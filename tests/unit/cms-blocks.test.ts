@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { BLOCKS, BLOCK_LIST, BLOCK_PICKER_LIST, getBlock, parseBlockContent, blockDefaults } from '@/lib/cms/blocks';
+import {
+  BLOCKS,
+  BLOCK_LIST,
+  BLOCK_PICKER_LIST,
+  getBlock,
+  parseBlockContent,
+  blockDefaults,
+  blocksForSurface,
+  type ImageWidgetContent,
+} from '@/lib/cms/blocks';
 import { googleFontsHref, fontStack, nearestWeight, findGoogleFont } from '@/lib/cms/google-fonts';
 import { newField, starterFields, uniqueFieldName, EMPTY_FORM } from '@/lib/cms/form-model';
 
@@ -254,5 +263,78 @@ describe('artwork that may be an icon', () => {
       unknown
     >;
     expect(parsed.icon).toBe('rocket');
+  });
+});
+
+describe('image widget', () => {
+  it('is a page block in the Cards & media group, and nowhere else', () => {
+    const block = getBlock('imageWidget');
+    expect(block?.label).toBe('Image');
+    expect(block?.group).toBe('Cards & media');
+    expect(BLOCK_PICKER_LIST.some((b) => b.type === 'imageWidget')).toBe(true);
+    expect(blocksForSurface('blogArticle').some((b) => b.type === 'imageWidget')).toBe(false);
+    expect(blocksForSurface('blogListing').some((b) => b.type === 'imageWidget')).toBe(false);
+  });
+
+  it('starts empty, centred, full width on mobile and unlinked', () => {
+    const defaults = blockDefaults('imageWidget') as ImageWidgetContent;
+    expect(defaults).toMatchObject({
+      imageId: null,
+      altText: '',
+      decorative: false,
+      caption: '',
+      alignment: 'center',
+      width: '100',
+      tabletWidth: 'inherit',
+      mobileWidth: '100',
+      maxWidth: '',
+      imageRatio: 'auto',
+      imageFit: 'cover',
+      imagePosition: 'center',
+      linkUrl: '',
+      openInNewTab: false,
+      borderEnabled: false,
+      borderRadius: 'none',
+      shadow: 'none',
+      captionAlign: 'center',
+    });
+  });
+
+  it('keeps only real lengths and colours, never raw CSS', () => {
+    const parsed = parseBlockContent<ImageWidgetContent>('imageWidget', {
+      width: 'custom',
+      customWidth: '70%',
+      tabletCustomWidth: '40rem',
+      mobileCustomWidth: '480',
+      maxWidth: '100px;background:url(x)',
+      customRadius: '-4px',
+      borderWidth: 'calc(1px + 1px)',
+      borderColor: 'red;} body{display:none',
+    });
+    expect(parsed.customWidth).toBe('70%');
+    expect(parsed.tabletCustomWidth).toBe('40rem');
+    expect(parsed.mobileCustomWidth).toBe('480px');
+    expect(parsed.maxWidth).toBe('');
+    expect(parsed.customRadius).toBe('');
+    expect(parsed.borderWidth).toBe('');
+    expect(parsed.borderColor).toBe('');
+  });
+
+  it('falls back per field rather than dropping the section', () => {
+    const parsed = parseBlockContent<ImageWidgetContent>('imageWidget', {
+      imageId: 'media-1',
+      alignment: 'diagonal',
+      imageRatio: '5/4',
+      shadow: 'huge',
+    });
+    expect(parsed.imageId).toBe('media-1');
+    expect(parsed.alignment).toBe('center');
+    expect(parsed.imageRatio).toBe('auto');
+    expect(parsed.shadow).toBe('none');
+  });
+
+  it('files every editor field under a group', () => {
+    const groups = new Set(BLOCKS.imageWidget!.fields.map((field) => field.group));
+    expect([...groups]).toEqual(['Image', 'Layout', 'Link', 'Appearance']);
   });
 });

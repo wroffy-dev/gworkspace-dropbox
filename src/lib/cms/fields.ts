@@ -119,6 +119,12 @@ type FieldVariant =
 export type FieldDescriptor = FieldVariant & {
   showWhen?: FieldCondition;
   /**
+   * A subheading for a long editor. The generated editor prints it above the
+   * first visible field of each run of fields sharing a group, and nothing
+   * else reads it — so it only arranges the form, never the stored content.
+   */
+  group?: string;
+  /**
    * What a new repeater item starts this field at.
    *
    * Without one a blank item takes the empty value for its kind, which is

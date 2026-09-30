@@ -49,15 +49,22 @@ export function FieldList({
   onChange: (name: string, value: unknown) => void;
   idPrefix: string;
 }) {
+  const visible = fields.filter((field) => isFieldVisible(field, values));
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {fields
-        .filter((field) => isFieldVisible(field, values))
-        .map((field) => (
-          <div
-            key={field.name}
-            className={cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])}
-          >
+      {visible.map((field, index) => (
+        <React.Fragment key={field.name}>
+          {field.group && field.group !== visible[index - 1]?.group ? (
+            <h3
+              className={cn(
+                'text-xs font-semibold uppercase tracking-wide text-muted sm:col-span-2',
+                index > 0 && 'mt-2 border-t border-hairline pt-4',
+              )}
+            >
+              {field.group}
+            </h3>
+          ) : null}
+          <div className={cn(WIDTH_CLASS[('width' in field && field.width) || 'full'])}>
             <FieldControl
               field={field}
               value={readFieldPath(values, field.name)}
@@ -67,7 +74,8 @@ export function FieldList({
               id={`${idPrefix}-${field.name}`}
             />
           </div>
-        ))}
+        </React.Fragment>
+      ))}
     </div>
   );
 }

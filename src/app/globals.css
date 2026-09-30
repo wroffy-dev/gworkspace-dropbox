@@ -511,6 +511,31 @@
     max-width: 100%;
   }
 
+  /*
+   * The Image section's frame. Its per-screen widths arrive as `--iw-*` from
+   * the block's content; the design panel's responsive Image width, when set,
+   * takes precedence. It never grows past its column, so no screen scrolls
+   * sideways.
+   */
+  .cms-image-widget {
+    width: var(--sec-img-w, var(--iw-w, 100%));
+    max-width: min(100%, var(--iw-max-w, 100%));
+  }
+  @media (max-width: 1023px) {
+    .cms-image-widget {
+      width: var(--sec-img-w, var(--iw-w-tablet, var(--iw-w, 100%)));
+    }
+  }
+  @media (max-width: 767px) {
+    .cms-image-widget {
+      width: var(--sec-img-w, var(--iw-w-mobile, var(--iw-w-tablet, var(--iw-w, 100%))));
+    }
+  }
+  .cms-image-widget.cms-image-widget--full {
+    width: 100%;
+    max-width: 100%;
+  }
+
   /* Global button tokens from Settings -> Website design. */
   .btn-tokens {
     border-radius: var(--btn-radius);

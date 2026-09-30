@@ -12,6 +12,22 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Image section** (Page Builder → Add section → Cards & media → Image): one
+  image from the Media Library with its own alt text (blank uses the library's),
+  a decorative switch, optional title and caption (`<figure>`/`<figcaption>`).
+  - **Layout**: left, centre, right or full-width alignment; width presets
+    (auto, 25–100%) or a custom length per desktop, tablet and mobile (mobile
+    defaults to 100%); optional maximum width; aspect ratio, fit and focal
+    point. The Design panel's responsive Image width overrides the widths.
+  - **Link**: the whole image can link anywhere, optionally in a new tab
+    (`rel="noopener noreferrer"`), through the same safe-URL check as buttons.
+  - **Appearance**: corner radius presets or a custom radius, optional border
+    (width, colour) and shadow. Every length and colour is validated; nothing
+    reaches the page as raw CSS.
+  - A missing or deleted image shows an empty slot in the admin preview and
+    nothing to visitors. Stored in `PageSection.content`; no migration.
+  - Block editor fields may now carry a `group`, shown as a subheading.
+
 - **Cities** (Admin → Locations → Cities, `/admin/cities`): local address
   spaces inside a market — `/delhi` in the root market, `/ae/dubai` in the UAE.
   Country stays the market; a city holds a slug, an optional region, contact
