@@ -83,7 +83,7 @@ export function RobotsPreview({
               </tbody>
             </table>
             <p className="mt-2 text-xs text-muted">
-              Rules are edited per market under Settings → Countries → a market → Crawler rules.
+              Rules are edited per market under Locations → Countries → a market → Crawler rules.
             </p>
           </div>
         ) : null}

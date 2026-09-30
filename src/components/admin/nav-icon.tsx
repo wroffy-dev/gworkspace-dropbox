@@ -26,6 +26,7 @@ import {
   Tag,
   Star,
   MapPin,
+  Server,
 } from 'lucide-react';
 
 const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -54,6 +55,7 @@ const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   tag: Tag,
   star: Star,
   'map-pin': MapPin,
+  server: Server,
 };
 
 export function NavIcon({ name, className }: { name: string; className?: string }) {

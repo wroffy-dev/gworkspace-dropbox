@@ -278,7 +278,7 @@ the upload directory. A file that has already gone is not an error.
 The database holds media *metadata* — rows, folders, alt text, every CMS
 reference. The bytes are a separate thing, and a restore needs both.
 
-The built-in backup (Admin → Settings → Backups) already includes the media
+The built-in backup (Admin → System → Backup & Restore) already includes the media
 library: it reads `UPLOAD_DIR` through the same resolution the writer uses, so
 the two can never disagree about which directory holds the files. Media is
 streamed into the archive one file at a time under its storage key, which is

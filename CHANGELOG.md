@@ -59,9 +59,23 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
   one market. Deleting a market also deletes its cities, and says so.
 - The Pages list has a City filter and a city badge, and the page editor says
   which city a page belongs to and where it was generated from.
+- **Admin navigation reorganised** into Dashboard, Website, Products, Content,
+  Leads & CRM, Marketing, SEO, Reports, Locations, Administration, System and
+  Settings. Only where things are listed changed: every URL, permission and
+  screen is the same.
+  - Popups → Marketing; Countries → Locations; Staff, Roles & Permissions and
+    the Audit Log → Administration; Recycle Bin, Backup & Restore and Seed
+    Files → System; Consent Notice sits with Forms; SEO is its own module.
+  - Breadcrumbs follow the new tree, add a middle step for nested screens
+    (Content › Blog › Categories), link a detail screen back to its list, and
+    only link to screens the signed-in user may open.
 
 ### Fixed
 
+- **One sidebar item lights up per screen.** Roles & Permissions also lit up
+  Staff, UTM Campaigns lit up Tracking & Pixels, and Backup & Restore lit up
+  Website Settings; a filtered Reports list (`?from=`) or tag search (`?q=`)
+  lit up nothing and lost its breadcrumb.
 - **Icon cards and Icon box: an uploaded image now sticks.** Choosing a
   Media Library image (PNG, SVG or any other) for a card that already had an
   icon wrote the image and then cleared the icon from the same stale values,

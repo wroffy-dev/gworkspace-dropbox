@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
-import { locateRoute } from '@/lib/admin/nav';
+import { canReach, locateRoute, parentItem, type AdminNavItem } from '@/lib/admin/nav';
+import type { PermissionKey } from '@/lib/auth/permissions';
 import { cn } from '@/lib/utils/cn';
 
 /**
@@ -15,9 +16,24 @@ import { cn } from '@/lib/utils/cn';
  *
  * Because the trail comes from ADMIN_NAV, a page never has to restate where it
  * lives — moving an item between modules updates every breadcrumb for free.
- * `leaf` names the current record on a detail route (a page title, a lead name).
+ * An item nested under another (Blog › Categories) gets that item as a middle
+ * step, and a detail route (/admin/pages/abc) links back to its list. A step is
+ * a link only when `can` allows its destination, so the trail never offers a
+ * screen the user would be refused. `leaf` names the current record on a
+ * detail route (a page title, a lead name).
  */
-export function AdminBreadcrumbs({ leaf, className }: { leaf?: string; className?: string }) {
+export function AdminBreadcrumbs({
+  leaf,
+  className,
+  can,
+  isSuperAdmin = false,
+}: {
+  leaf?: string;
+  className?: string;
+  /** Without it every step is shown as a link, as before. */
+  can?: (permission: PermissionKey) => boolean;
+  isSuperAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const located = locateRoute(pathname, searchParams.toString());
@@ -25,11 +41,22 @@ export function AdminBreadcrumbs({ leaf, className }: { leaf?: string; className
   if (!located) return null;
 
   const { group, item } = located;
-  const onIndex = Boolean(item) && !leaf;
+  const reachable = (target: AdminNavItem) => !can || canReach(target, can, isSuperAdmin);
 
   const trail: Array<{ label: string; href?: string }> = [];
   if (group.href !== '/admin') trail.push({ label: group.label });
-  if (item) trail.push({ label: item.label, href: onIndex ? undefined : item.href });
+  if (item) {
+    const parent = parentItem(group, item);
+    if (parent) {
+      trail.push({ label: parent.label, href: reachable(parent) ? parent.href : undefined });
+    }
+    // On the list itself the item is where you are; beneath it, it is the way back.
+    const onIndex = !leaf && pathname === item.href.split('?')[0];
+    trail.push({
+      label: item.crumbLabel ?? item.label,
+      href: onIndex || !reachable(item) ? undefined : item.href,
+    });
+  }
   if (leaf) trail.push({ label: leaf });
 
   if (trail.length === 0) return null;
@@ -50,7 +77,9 @@ export function AdminBreadcrumbs({ leaf, className }: { leaf?: string; className
           return (
             <li key={`${crumb.label}-${index}`} className="flex min-w-0 items-center gap-1.5">
               <ChevronRight className="h-3 w-3 shrink-0 opacity-60" aria-hidden="true" />
-              {crumb.href && !last ? (
+              {/* A step with an href is somewhere else — on a detail route that
+                  includes the last one, the list the record belongs to. */}
+              {crumb.href ? (
                 <Link
                   href={crumb.href}
                   className="admin-focus admin-focus-header truncate rounded transition-colors hover:text-admin-nav"

@@ -7,7 +7,7 @@ itself waits to be restored.
 
 ## Where it is
 
-**Website → Recycle Bin** (`/admin/trash`) lists deleted pages, articles,
+**System → Recycle Bin** (`/admin/trash`) lists deleted pages, articles,
 product categories and brands, newest first, with a filter per kind.
 
 **Products → Removed Products** (`/admin/products/trash`) is separate on

@@ -834,7 +834,7 @@ function structuredDataFix(types: string[]): string {
   if (types.includes('BlogPosting')) return 'Article data comes from the post: give it an author and a publish date.';
   if (types.includes('BreadcrumbList')) return 'Breadcrumbs are generated for every page but the home page; check the page is not the market’s homepage by mistake.';
   if (types.includes('FAQPage')) return 'FAQ markup is generated from FAQ sections; keep questions in an FAQ section rather than plain text.';
-  return 'Fill in the organisation’s name, logo and contact details under Settings → Countries and Admin → SEO.';
+  return 'Fill in the organisation’s name, logo and contact details under Locations → Countries and Admin → SEO.';
 }
 
 export function scoreSeo(doc: SeoDocument, analysis: DocumentAnalysis): ScoreBreakdown {

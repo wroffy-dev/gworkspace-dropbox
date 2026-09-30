@@ -595,7 +595,7 @@ Container Apps has a built-in job type for this.
    site.
 8. **Review + create** → **Create**.
 
-Then set the schedule itself in **Admin → Settings → Backup & restore** —
+Then set the schedule itself in **Admin → System → Backup & restore** —
 frequency, time, and how many to keep.
 
 Full detail: [docs/BACKUP-RESTORE.md](BACKUP-RESTORE.md).
@@ -743,7 +743,7 @@ Traffic moves within about a minute.
 > left it. Migrations in this project are written to be additive — they add
 > columns and tables rather than removing them — so an older image normally runs
 > fine against a newer schema. If you need to go back further, restore a database
-> backup from **Admin → Settings → Backup & restore**.
+> backup from **Admin → System → Backup & restore**.
 
 ---
 
