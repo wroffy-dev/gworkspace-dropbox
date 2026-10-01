@@ -4,12 +4,14 @@ import * as React from 'react';
 import { Plus, Trash, ChevronDown, GripVertical } from 'lucide-react';
 import type { FieldDescriptor } from '@/lib/cms/fields';
 import { isFieldVisible, readFieldPath, writeFieldPath } from '@/lib/cms/fields';
+import { popupIdFromHref } from '@/lib/cms/popup-link';
 import { Field, Input, Textarea, Select, Switch, Label } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { MediaPicker } from '@/components/admin/media-picker';
 import { RichTextEditor } from './rich-text-editor';
 import { ProductMultiSelect } from './product-select';
 import { FormSelect } from './form-select';
+import { LinkInput } from './link-input';
 import { IconSelect } from './icon-select';
 import { MediaOrIcon } from './media-or-icon';
 import { CategorySelect, BrandSelect } from './taxonomy-select';
@@ -237,15 +239,17 @@ function FieldControl({
         <Field
           label={field.label}
           htmlFor={id}
-          hint={field.help ?? 'Internal path (/pricing) or full URL'}
+          hint={
+            popupIdFromHref(typeof value === 'string' ? value : '')
+              ? 'Opens the popup on this page. Popups are made under Marketing → Popups.'
+              : (field.help ?? 'Internal path (/pricing) or full URL')
+          }
         >
-          <Input
+          <LinkInput
             id={id}
-            type="text"
-            inputMode="url"
             value={typeof value === 'string' ? value : ''}
-            placeholder={field.placeholder ?? '/contact'}
-            onChange={(e) => onChange(e.target.value)}
+            placeholder={field.placeholder}
+            onChange={onChange}
           />
         </Field>
       );

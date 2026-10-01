@@ -54,7 +54,7 @@ export default async function PopupsAdmin() {
     <div className="mx-auto max-w-5xl">
       <AdminPageHeader
         title="Popups"
-        description="Timed, scroll and exit-intent popups. Each one is capped per visitor by its frequency setting."
+        description="Timed, scroll and exit-intent popups, or ones that open from any button. Automatic popups are capped per visitor by their frequency setting."
         crumbs={[{ label: 'Popups' }]}
       />
       <Card className="p-4 sm:p-5">

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { PublicFormLoader } from '@/components/forms/form-loader';
+import { popupIdFromHref } from '@/lib/cms/popup-link';
 
 export type PopupConfig = {
   id: string;
@@ -77,14 +78,56 @@ export function PopupHost({
 }) {
   const pathname = usePathname();
   const [active, setActive] = React.useState<PopupConfig | null>(null);
+  /** Opened by a link rather than by its own trigger: not counted as seen. */
+  const [byLink, setByLink] = React.useState(false);
+  /** Where focus was before a link opened the popup, to hand it back on close. */
+  const returnFocus = React.useRef<HTMLElement | null>(null);
+
+  const openById = React.useCallback(
+    (id: string) => {
+      const popup = popups.find((p) => p.id === id);
+      if (!popup) return false;
+      setByLink(true);
+      setActive(popup);
+      return true;
+    },
+    [popups],
+  );
+
+  /*
+   * Links to `#popup-<id>` open that popup, wherever the link is: a section's
+   * button, a menu item, a rich-text link. Caught in the capture phase so it
+   * runs before Next's <Link>, which then sees the click handled and stays put.
+   * Targeting, device and frequency do not apply — the visitor asked for it.
+   */
+  React.useEffect(() => {
+    if (popups.length === 0) return;
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as Element | null)?.closest?.('a[href]');
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      const id = popupIdFromHref(anchor.getAttribute('href'));
+      if (!id) return;
+      // A link to the popup on another page goes there; the page opens it.
+      if (anchor.pathname !== window.location.pathname) return;
+      if (!openById(id)) return;
+      event.preventDefault();
+      returnFocus.current = anchor;
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, [popups, openById]);
 
   React.useEffect(() => {
     setActive(null);
+    setByLink(false);
     if (popups.length === 0) return;
 
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
     const candidates = popups.filter(
       (p) =>
+        p.trigger !== 'CLICK' &&
         matchesPath(p, pathname, basePath) &&
         !seenRecently(p) &&
         (p.device === 'ALL' || (p.device === 'MOBILE') === isMobile),
@@ -92,7 +135,7 @@ export function PopupHost({
     const popup = candidates[0];
     if (!popup) return;
 
-    const show = () => setActive(popup);
+    const show = () => setActive((current) => current ?? popup);
     const cleanups: Array<() => void> = [];
 
     if (popup.trigger === 'IMMEDIATE') {
@@ -125,10 +168,29 @@ export function PopupHost({
     return () => cleanups.forEach((fn) => fn());
   }, [pathname, popups, basePath]);
 
+  // An address ending in `#popup-<id>` opens it when the page loads.
+  // After the effect above, which clears the popup on every navigation.
+  React.useEffect(() => {
+    const fromHash = () => {
+      const id = popupIdFromHref(window.location.hash);
+      if (id) openById(id);
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+    return () => window.removeEventListener('hashchange', fromHash);
+  }, [pathname, openById]);
+
   const close = React.useCallback(() => {
-    if (active) markSeen(active.id);
+    if (active && !byLink) markSeen(active.id);
+    if (active && popupIdFromHref(window.location.hash) === active.id) {
+      // Drop the hash so a reload or a second click opens it again.
+      window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+    }
     setActive(null);
-  }, [active]);
+    setByLink(false);
+    returnFocus.current?.focus();
+    returnFocus.current = null;
+  }, [active, byLink]);
 
   React.useEffect(() => {
     if (!active) return;

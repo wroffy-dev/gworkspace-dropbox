@@ -38,7 +38,7 @@ const popupSchema = z
     leadMagnetId: optional(40),
     ctaLabel: optional(60),
     ctaUrl: optional(400),
-    trigger: z.enum(['IMMEDIATE', 'DELAY', 'SCROLL', 'EXIT_INTENT']).default('DELAY'),
+    trigger: z.enum(['IMMEDIATE', 'DELAY', 'SCROLL', 'EXIT_INTENT', 'CLICK']).default('DELAY'),
     delaySeconds: z.coerce.number().int().min(0).max(600).default(5),
     scrollPercent: z.coerce.number().int().min(1).max(100).default(50),
     device: z.enum(['ALL', 'DESKTOP', 'MOBILE']).default('ALL'),
