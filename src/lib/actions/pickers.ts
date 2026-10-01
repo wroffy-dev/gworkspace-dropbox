@@ -158,3 +158,24 @@ export async function listAuthorOptions(): Promise<PickerOption[]> {
   });
   return rows.map((row) => ({ value: row.id, label: row.name, hint: row.jobTitle }));
 }
+
+/**
+ * Popups a link can open (see `popup-link.ts`). Off popups are listed too,
+ * marked, so a button can be wired up before its popup goes live.
+ */
+export async function listPopupOptions(): Promise<PickerOption[]> {
+  const user = await getCurrentUser();
+  if (!userCan(user, 'marketing.manage') && !userCan(user, 'pages.edit')) return [];
+
+  const rows = await prisma.popup.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: 'asc' },
+    take: 200,
+    select: { id: true, name: true, isActive: true },
+  });
+  return rows.map((row) => ({
+    value: row.id,
+    label: row.name,
+    hint: row.isActive ? null : 'off',
+  }));
+}

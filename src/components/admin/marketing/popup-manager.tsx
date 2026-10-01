@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash, Megaphone } from 'lucide-react';
+import { Plus, Pencil, Trash, Megaphone, Link2, Check } from 'lucide-react';
 import { savePopup, togglePopup, deletePopup } from '@/lib/actions/campaigns';
 import { Dialog, ConfirmDialog } from '@/components/ui/dialog';
 import { Field, Input, Select, Textarea, Switch } from '@/components/ui/field';
@@ -15,6 +15,8 @@ import { StringListEditor } from '@/components/admin/list-editor';
 import { useToast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/icons';
 import { formatDate } from '@/lib/utils/format';
+import { popupHref } from '@/lib/cms/popup-link';
+import { cn } from '@/lib/utils/cn';
 
 export type PopupRow = {
   id: string;
@@ -54,7 +56,46 @@ const TRIGGER_LABELS: Record<string, string> = {
   DELAY: 'After a delay',
   SCROLL: 'On scroll',
   EXIT_INTENT: 'On exit intent',
+  CLICK: 'Only when a button is clicked',
 };
+
+/**
+ * The link that opens a popup, with a copy button. Pasted as any button's or
+ * menu item's link, it opens the popup instead of leaving the page.
+ */
+function PopupLinkCopy({ popupId, compact = false }: { popupId: string; compact?: boolean }) {
+  const { toast } = useToast();
+  const [copied, setCopied] = React.useState(false);
+  const href = popupHref(popupId);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast('Could not copy. Select the link and copy it instead.', 'error');
+    }
+  }
+
+  const Icon = copied ? Check : Link2;
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={`Copy button link ${href}`}
+      aria-label={compact ? 'Copy button link' : undefined}
+      className={cn(
+        'inline-flex max-w-full items-center gap-1.5 rounded text-xs text-muted transition-colors hover:bg-muted/10 hover:text-content',
+        compact ? 'p-1.5' : 'px-2 py-1',
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      {compact ? null : <code className="truncate font-mono">{href}</code>}
+      <span className="sr-only" aria-live="polite">{copied ? 'Copied' : ''}</span>
+    </button>
+  );
+}
 
 function blank(): PopupRow {
   return {
@@ -180,8 +221,12 @@ export function PopupManager({
                     {row.trigger === 'SCROLL' ? ` (${row.scrollPercent}%)` : ''}
                   </Td>
                   <Td className="text-sm text-muted">
-                    {row.urlPatterns.length > 0 ? `${row.urlPatterns.length} page rule(s)` : 'Every page'}
-                    {row.device !== 'ALL' ? ` · ${row.device.toLowerCase()}` : ''}
+                    {row.trigger === 'CLICK'
+                      ? 'Wherever it is linked'
+                      : row.urlPatterns.length > 0
+                        ? `${row.urlPatterns.length} page rule(s)`
+                        : 'Every page'}
+                    {row.trigger !== 'CLICK' && row.device !== 'ALL' ? ` · ${row.device.toLowerCase()}` : ''}
                   </Td>
                   <Td className="whitespace-nowrap text-sm text-muted">
                     {row.startsAt || row.endsAt
@@ -196,6 +241,7 @@ export function PopupManager({
                   <Td align="right">
                     {canEdit ? (
                       <div className="flex items-center justify-end gap-1">
+                        <PopupLinkCopy popupId={row.id} compact />
                         <button
                           type="button"
                           onClick={() => run(() => togglePopup(row.id))}
@@ -384,31 +430,35 @@ export function PopupManager({
                     </Select>
                   </Field>
                 ) : null}
-                <Field label="Devices" htmlFor="popup-device">
-                  <Select
-                    id="popup-device"
-                    value={editing.device}
-                    onChange={(e) => set({ device: e.target.value })}
-                  >
-                    <option value="ALL">All devices</option>
-                    <option value="DESKTOP">Desktop only</option>
-                    <option value="MOBILE">Mobile only</option>
-                  </Select>
-                </Field>
-                <Field
-                  label="Show again after (days)"
-                  htmlFor="popup-frequency"
-                  hint="0 shows it on every visit."
-                >
-                  <Input
-                    id="popup-frequency"
-                    type="number"
-                    min={0}
-                    max={365}
-                    value={editing.frequencyDays}
-                    onChange={(e) => set({ frequencyDays: Number(e.target.value) })}
-                  />
-                </Field>
+                {editing.trigger !== 'CLICK' ? (
+                  <>
+                    <Field label="Devices" htmlFor="popup-device">
+                      <Select
+                        id="popup-device"
+                        value={editing.device}
+                        onChange={(e) => set({ device: e.target.value })}
+                      >
+                        <option value="ALL">All devices</option>
+                        <option value="DESKTOP">Desktop only</option>
+                        <option value="MOBILE">Mobile only</option>
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Show again after (days)"
+                      htmlFor="popup-frequency"
+                      hint="0 shows it on every visit."
+                    >
+                      <Input
+                        id="popup-frequency"
+                        type="number"
+                        min={0}
+                        max={365}
+                        value={editing.frequencyDays}
+                        onChange={(e) => set({ frequencyDays: Number(e.target.value) })}
+                      />
+                    </Field>
+                  </>
+                ) : null}
                 <Field label="Start date" htmlFor="popup-start">
                   <Input
                     id="popup-start"
@@ -427,17 +477,37 @@ export function PopupManager({
                 </Field>
               </div>
 
-              <StringListEditor
-                label="Page rules"
-                itemLabel="rule"
-                value={editing.urlPatterns}
-                onChange={(next) => set({ urlPatterns: next })}
-                placeholder="pricing or blog/*"
-              />
-              <p className="text-xs text-muted">
-                Leave empty to show on every page. A trailing * matches everything below that path.
-              </p>
+              {editing.trigger !== 'CLICK' ? (
+                <>
+                  <StringListEditor
+                    label="Page rules"
+                    itemLabel="rule"
+                    value={editing.urlPatterns}
+                    onChange={(next) => set({ urlPatterns: next })}
+                    placeholder="pricing or blog/*"
+                  />
+                  <p className="text-xs text-muted">
+                    Leave empty to show on every page. A trailing * matches everything below that path.
+                  </p>
+                </>
+              ) : null}
             </fieldset>
+
+            <div className="space-y-2 rounded-lg border border-hairline p-4">
+              <p className="text-sm font-medium text-content">Open it from a button</p>
+              <p className="text-xs text-muted">
+                In a section&rsquo;s button link, choose <strong>Open a popup</strong> and pick this
+                one. For a menu item, or anywhere else a link is typed, paste this link.
+                {editing.trigger === 'CLICK'
+                  ? ' With this trigger it opens only from such a link.'
+                  : ' It still opens by its own trigger as well.'}
+              </p>
+              {editing.id ? (
+                <PopupLinkCopy popupId={editing.id} />
+              ) : (
+                <p className="text-xs text-muted">Save the popup to get its link.</p>
+              )}
+            </div>
 
             <div className="rounded-lg border border-hairline p-4">
               <Switch

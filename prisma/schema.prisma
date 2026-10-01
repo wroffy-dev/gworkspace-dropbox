@@ -205,6 +205,8 @@ enum PopupTrigger {
   DELAY
   SCROLL
   EXIT_INTENT
+  /// Never opens by itself: only a link to `#popup-<id>` (a button, menu item…) opens it.
+  CLICK
 }
 
 enum PopupType {

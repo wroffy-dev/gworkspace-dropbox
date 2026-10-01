@@ -12,6 +12,21 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Popups from any button** — a popup can now be opened by a button instead
+  of (or as well as) its own trigger:
+  - Every button link in the page builder has **Go to a link / Open a
+    popup**; choosing a popup stores it as `#popup-<id>`.
+  - New trigger **Only when a button is clicked**: the popup never opens by
+    itself. Page rules, devices and frequency are hidden for it, since a
+    visitor who clicks has asked for it.
+  - Each popup shows its link with a copy button (in the list and in the
+    editor), to paste into a menu item, the header button or a text link.
+  - `/page#popup-<id>` opens the popup when that page loads, so a link on one
+    page can open a popup on another.
+  - On close, focus goes back to the button that opened it, and the hash is
+    cleared so it can be opened again.
+  - Migration `20261001120000_popup_click_trigger` adds the `CLICK` enum
+    value. It's additive and leaves existing popups unchanged.
 - **Admin dark mode** — a Light / Dark / System theme toggle in the admin
   topbar (in the account menu on phones). The choice is remembered in this
   browser, System follows the operating system live, and an inline script
