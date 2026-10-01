@@ -19,6 +19,7 @@ import { LOGIN_PATH } from '@/lib/auth/routes';
 import { cn } from '@/lib/utils/cn';
 import { AdminSearch } from './admin-search';
 import { AdminBreadcrumbs } from './breadcrumbs';
+import { ThemeToggle, ThemeMenuItems } from './theme-toggle';
 import { AdminCountrySwitcher } from './country-switcher';
 import { Menu, MenuItem, MenuSeparator } from '@/components/ui/menu';
 import type { CountryContext } from '@/lib/country/types';
@@ -127,6 +128,11 @@ export function AdminTopbar({
           </Menu>
         ) : null}
 
+        {/* On a phone the account menu carries the theme instead. */}
+        <div className="hidden sm:block">
+          <ThemeToggle />
+        </div>
+
         <a
           href="/"
           target="_blank"
@@ -182,6 +188,7 @@ export function AdminTopbar({
           <MenuItem href="/admin/profile?tab=security" icon={<ShieldCheck className="h-4 w-4" />}>
             Security
           </MenuItem>
+          <ThemeMenuItems className="sm:hidden" />
           <MenuSeparator />
           <MenuItem href="/" external icon={<ExternalLink className="h-4 w-4" />}>
             View website

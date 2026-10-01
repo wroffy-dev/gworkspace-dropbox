@@ -12,6 +12,13 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Admin dark mode** — a Light / Dark / System theme toggle in the admin
+  topbar (in the account menu on phones). The choice is remembered in this
+  browser, System follows the operating system live, and an inline script
+  applies it before the first paint so a reload never flashes light. Admin
+  only: everything is scoped to `.admin-ui`, so the public site is unchanged.
+  Glass surfaces, tinted status chips, the switch knob, preview frames and the
+  dark logo (when one is set in Settings) are all handled.
 - **Admin design system, phase 2** — module screens (admin only):
   - **Products**: Total, Published, Draft and Removed for the market being
     worked in; Removed counts exactly what Removed Products lists (one shared

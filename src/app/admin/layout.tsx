@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db/prisma';
 import { getCurrentUser, requireUser } from '@/lib/auth/guards';
 import { getWebsiteSettings } from '@/lib/services/settings';
 import { getAdminCountryScope } from '@/lib/country/admin';
+import { ADMIN_THEME_INIT_SCRIPT } from '@/lib/admin/theme';
 import { AdminShell } from '@/components/admin/admin-shell';
 
 /**
@@ -46,6 +47,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]);
 
   return (
+    <>
+    {/* Sets the light or dark theme before the first paint, so a reload in
+        dark mode never flashes light. See lib/admin/theme.ts. */}
+    <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
     <AdminShell
       user={{
         name: user.name,
@@ -58,8 +63,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       branding={{
         siteName: site.siteName,
         logoUrl: site.logoUrl,
-        // The admin rail is dark, so it prefers the dark-surface logo when one
-        // has been uploaded — the same choice the public footer makes.
+        // The light rail shows the ordinary logo; dark mode shows this one
+        // when it has been uploaded — the same choice the public footer makes.
         logoDarkUrl: site.logoDarkUrl,
       }}
       country={{ id: scope.country.id, code: scope.country.code, name: scope.country.name }}
@@ -72,5 +77,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     >
       {children}
     </AdminShell>
+    </>
   );
 }
