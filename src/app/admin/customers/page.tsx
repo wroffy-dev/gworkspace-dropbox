@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { StatCard } from '@/components/admin/stat-card';
 import { FilterBar } from '@/components/admin/filter-bar';
 import { daysAgo, type FilterDefinition, type FilterPreset } from '@/lib/admin/filters';
 import { AdminPagination } from '@/components/admin/admin-pagination';
@@ -51,6 +52,15 @@ export default async function CustomersAdmin({
       ...(params.to ? { lte: new Date(`${params.to}T23:59:59.999`) } : {}),
     };
   }
+
+  // The summary counts every customer, whatever the filters below narrow to.
+  const [statusGroups, unassignedCustomers] = await Promise.all([
+    prisma.customer.groupBy({ by: ['status'], where: { deletedAt: null }, _count: { _all: true } }),
+    prisma.customer.count({ where: { deletedAt: null, assignedToId: null } }),
+  ]);
+  const customersWith = (status: string) =>
+    statusGroups.find((group) => group.status === status)?._count._all ?? 0;
+  const customerTotal = statusGroups.reduce((sum, group) => sum + group._count._all, 0);
 
   const [rows, total, staff] = await Promise.all([
     prisma.customer.findMany({
@@ -141,6 +151,31 @@ export default async function CustomersAdmin({
           ) : null
         }
       />
+
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard label="Customers" value={customerTotal} icon="building" href="/admin/customers" />
+        <StatCard
+          label="Active"
+          value={customersWith('ACTIVE')}
+          icon="check"
+          tone="success"
+          href="/admin/customers?status=ACTIVE"
+        />
+        <StatCard
+          label="Prospects"
+          value={customersWith('PROSPECT')}
+          icon="sparkles"
+          tone="brand"
+          href="/admin/customers?status=PROSPECT"
+        />
+        <StatCard
+          label="Unassigned"
+          value={unassignedCustomers}
+          icon="user-x"
+          tone={unassignedCustomers > 0 ? 'warning' : 'default'}
+          href="/admin/customers?assignedTo=unassigned"
+        />
+      </div>
 
       <FilterBar
         searchPlaceholder="Search by name, company or email"

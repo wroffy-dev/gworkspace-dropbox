@@ -74,7 +74,7 @@ export default async function BlogCategories() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div>
       <AdminPageHeader
         title="Blog categories"
         description="Each category gets its own archive page and appears in the blog filter bar. Categories can nest, e.g. Microsoft → Azure."

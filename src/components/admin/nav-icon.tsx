@@ -27,6 +27,16 @@ import {
   Star,
   MapPin,
   Server,
+  CircleCheck,
+  CircleX,
+  Clock,
+  MousePointerClick,
+  UserX,
+  Trophy,
+  Percent,
+  PhoneCall,
+  Send,
+  Sparkles,
 } from 'lucide-react';
 
 const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -56,6 +66,16 @@ const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   star: Star,
   'map-pin': MapPin,
   server: Server,
+  check: CircleCheck,
+  'x-circle': CircleX,
+  clock: Clock,
+  click: MousePointerClick,
+  'user-x': UserX,
+  trophy: Trophy,
+  percent: Percent,
+  phone: PhoneCall,
+  send: Send,
+  sparkles: Sparkles,
 };
 
 export function NavIcon({ name, className }: { name: string; className?: string }) {

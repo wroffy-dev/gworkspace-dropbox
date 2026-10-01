@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -47,6 +48,13 @@ export function EmptyState({
   );
 }
 
+const ALERT_ICONS = {
+  info: Info,
+  success: CircleCheck,
+  warning: TriangleAlert,
+  danger: CircleX,
+} as const;
+
 export function Alert({
   tone = 'info',
   title,
@@ -64,13 +72,24 @@ export function Alert({
     warning: 'border-amber-200 bg-amber-50 text-amber-900',
     danger: 'border-red-200 bg-red-50 text-red-900',
   } as const;
+  const iconTones = {
+    info: 'text-sky-600',
+    success: 'text-emerald-600',
+    warning: 'text-amber-600',
+    danger: 'text-red-600',
+  } as const;
+  // The icon repeats the tone in shape as well as colour (DESIGN.md §14).
+  const Icon = ALERT_ICONS[tone];
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
-      className={cn('rounded-lg border px-4 py-3 text-sm', tones[tone], className)}
+      className={cn('flex gap-3 rounded-lg border px-4 py-3 text-sm', tones[tone], className)}
     >
-      {title ? <p className="font-semibold">{title}</p> : null}
-      {children ? <div className={cn(title && 'mt-1')}>{children}</div> : null}
+      <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', iconTones[tone])} aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        {title ? <p className="font-semibold">{title}</p> : null}
+        {children ? <div className={cn(title && 'mt-1')}>{children}</div> : null}
+      </div>
     </div>
   );
 }

@@ -413,33 +413,38 @@ export default async function LeadsAdmin({
         }
       />
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        <StatCard label="Total" value={totalLeads} href={`/admin/leads${countryQuery('')}`} />
-        <StatCard label="New" value={counts.NEW ?? 0} tone="brand" href={`/admin/leads${countryQuery('status=NEW')}`} />
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4 min-[1680px]:grid-cols-7">
+        <StatCard label="Total" value={totalLeads} icon="inbox" href={`/admin/leads${countryQuery('')}`} />
+        <StatCard label="New" value={counts.NEW ?? 0} icon="sparkles" tone="brand" href={`/admin/leads${countryQuery('status=NEW')}`} />
         <StatCard
           label="Contacted"
+          icon="phone"
           value={counts.CONTACTED ?? 0}
           href={`/admin/leads${countryQuery('status=CONTACTED')}`}
         />
         <StatCard
           label="Qualified"
+          icon="check"
           value={counts.QUALIFIED ?? 0}
           href={`/admin/leads${countryQuery('status=QUALIFIED')}`}
         />
         <StatCard
           label="Won"
+          icon="trophy"
           value={counts.WON ?? 0}
           tone="success"
           href={`/admin/leads${countryQuery('status=WON')}`}
         />
         <StatCard
           label="Lost"
+          icon="x-circle"
           value={counts.LOST ?? 0}
           tone="danger"
           href={`/admin/leads${countryQuery('status=LOST')}`}
         />
         <StatCard
           label="Unassigned"
+          icon="user-x"
           value={unassignedCount}
           tone={unassignedCount > 0 ? 'warning' : 'default'}
           hint={followUpCount > 0 ? `${followUpCount} follow-ups due` : undefined}

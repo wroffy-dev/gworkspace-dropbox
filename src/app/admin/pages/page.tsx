@@ -3,6 +3,7 @@ import { Plus, FolderTree } from 'lucide-react';
 import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { StatCard } from '@/components/admin/stat-card';
 import { FilterBar } from '@/components/admin/filter-bar';
 import type { FilterDefinition, FilterPreset } from '@/lib/admin/filters';
 import { AdminPagination } from '@/components/admin/admin-pagination';
@@ -62,6 +63,19 @@ export default async function PagesAdmin({
   const city = cityOptions.find((option) => option.id === params.city);
   if (params.city === 'none') where.cityId = null;
   else if (city) where.cityId = city.id;
+
+  // The summary counts the whole market, whatever the filters below narrow to.
+  const marketWhere: Prisma.PageWhereInput = {
+    deletedAt: null,
+    ...(country.countryId ? { countryId: country.countryId } : {}),
+  };
+  const [statusGroups, cityPageCount] = await Promise.all([
+    prisma.page.groupBy({ by: ['status'], where: marketWhere, _count: { _all: true } }),
+    prisma.page.count({ where: { ...marketWhere, cityId: { not: null } } }),
+  ]);
+  const pagesWith = (status: string) =>
+    statusGroups.find((group) => group.status === status)?._count._all ?? 0;
+  const pageTotal = statusGroups.reduce((sum, group) => sum + group._count._all, 0);
 
   const [rows, total, categoryOptions] = await Promise.all([
     prisma.page.findMany({
@@ -185,6 +199,19 @@ export default async function PagesAdmin({
           </>
         }
       />
+
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard label="Total pages" value={pageTotal} icon="file" href="/admin/pages" />
+        <StatCard
+          label="Published"
+          value={pagesWith('PUBLISHED')}
+          icon="globe"
+          tone="success"
+          href="/admin/pages?status=PUBLISHED"
+        />
+        <StatCard label="Drafts" value={pagesWith('DRAFT')} icon="clipboard" href="/admin/pages?status=DRAFT" />
+        <StatCard label="City pages" value={cityPageCount} icon="map-pin" href="/admin/cities" />
+      </div>
 
       <FilterBar
         searchPlaceholder="Search pages by title or URL"

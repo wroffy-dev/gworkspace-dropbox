@@ -6,6 +6,7 @@ import { Plus, Tag, Layers, Palette } from 'lucide-react';
 import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan, userCanAny } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { StatCard } from '@/components/admin/stat-card';
 import { FilterBar } from '@/components/admin/filter-bar';
 import type { FilterDefinition, FilterPreset } from '@/lib/admin/filters';
 import { AdminPagination } from '@/components/admin/admin-pagination';
@@ -67,6 +68,16 @@ export default async function BlogAdmin({
       ...(params.to ? { lte: new Date(`${params.to}T23:59:59.999Z`) } : {}),
     };
   }
+
+  // The summary counts the whole market, whatever the filters below narrow to.
+  const statusGroups = await prisma.blogPost.groupBy({
+    by: ['status'],
+    where: { deletedAt: null, ...(country.countryId ? { countryId: country.countryId } : {}) },
+    _count: { _all: true },
+  });
+  const postsWith = (status: string) =>
+    statusGroups.find((group) => group.status === status)?._count._all ?? 0;
+  const postTotal = statusGroups.reduce((sum, group) => sum + group._count._all, 0);
 
   const [rows, total, categories, tags, authors] = await Promise.all([
     prisma.blogPost.findMany({
@@ -227,6 +238,25 @@ export default async function BlogAdmin({
           </>
         }
       />
+
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard label="Total posts" value={postTotal} icon="file" href="/admin/blog" />
+        <StatCard
+          label="Published"
+          value={postsWith('PUBLISHED')}
+          icon="globe"
+          tone="success"
+          href="/admin/blog?status=PUBLISHED"
+        />
+        <StatCard label="Drafts" value={postsWith('DRAFT')} icon="clipboard" href="/admin/blog?status=DRAFT" />
+        <StatCard
+          label="Scheduled"
+          value={postsWith('SCHEDULED')}
+          icon="clock"
+          tone={postsWith('SCHEDULED') > 0 ? 'brand' : 'default'}
+          href="/admin/blog?status=SCHEDULED"
+        />
+      </div>
 
       <FilterBar
         searchPlaceholder="Search posts by title or excerpt"

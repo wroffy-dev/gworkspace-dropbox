@@ -12,6 +12,24 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Admin design system, phase 3: consistency across every module** (admin
+  only; the public site is unchanged):
+  - **One page width.** List screens now use the full workspace. Form and
+    settings screens keep a readable width but align left. The title sits in
+    the same place on every screen, instead of jumping between centred
+    widths.
+  - **One KPI style.** All summary cards use the glass `StatCard` with an icon:
+    - Leads and the CRM dashboard are restyled to it. On the CRM dashboard
+      the trend chip for "Lost" reads red when lost leads go up
+      (`invertTrend`).
+    - New summaries on Popups, Lead magnets, Forms, Pages, Blog and
+      Customers.
+    - KPI grids show two per row on phones instead of one.
+  - **Primary actions in the page header.** "New popup" and "New lead magnet"
+    moved there from inside the list card.
+  - **Alerts carry an icon** matching their tone, so the tone is not shown by
+    colour alone.
+  - **Navigation** has a proper empty state with a "New menu" action.
 - **Popups from any button** — a popup can now be opened by a button instead
   of (or as well as) its own trigger:
   - Every button link in the page builder has **Go to a link / Open a

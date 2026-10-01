@@ -47,7 +47,7 @@ export default async function CityGenerator({
         crumbs={[{ label: 'Locations' }, { label: 'Cities', href: '/admin/cities' }, { label: 'City Page Generator' }]}
       />
 
-      <div className="mx-auto max-w-5xl space-y-8">
+      <div className="max-w-5xl space-y-8">
         <CityPageGenerator
           markets={markets}
           cities={cities.map((city) => ({

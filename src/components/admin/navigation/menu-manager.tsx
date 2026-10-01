@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash, Pencil } from 'lucide-react';
+import { Menu, Plus, Trash, Pencil } from 'lucide-react';
 import { saveNavigation, deleteNavigation } from '@/lib/actions/navigation';
 import { NavigationEditor, type EditorItem, type NavTargets } from './nav-editor';
 import { Dialog, ConfirmDialog } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { Field, Input, Select } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/icons';
+import { EmptyState } from '@/components/ui/states';
 import { cn } from '@/lib/utils/cn';
 
 export type MenuSummary = {
@@ -118,7 +119,7 @@ export function MenuManager({
           </ul>
 
           {canEdit ? (
-            <div className="mt-2 border-t border-hairline pt-2">
+            <div className={cn(menus.length > 0 && 'mt-2 border-t border-hairline pt-2')}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -163,8 +164,24 @@ export function MenuManager({
             canEdit={canEdit}
           />
         ) : (
-          <div className="rounded-xl border border-dashed border-hairline px-6 py-16 text-center">
-            <p className="text-sm text-muted">Create a menu to start building your navigation.</p>
+          <div className="rounded-xl border border-dashed border-hairline bg-surface">
+            <EmptyState
+              icon={<Menu className="h-5 w-5" />}
+              title={menus.length === 0 ? 'No menus yet' : 'Choose a menu'}
+              description={
+                menus.length === 0
+                  ? 'Create a header menu for the main navigation, and footer menus for the links at the bottom of every page.'
+                  : 'Pick a menu on the left to edit its links.'
+              }
+              action={
+                canEdit && menus.length === 0 ? (
+                  <Button onClick={() => setEditing({ ...BLANK })}>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    New menu
+                  </Button>
+                ) : undefined
+              }
+            />
           </div>
         )}
       </div>
