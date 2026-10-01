@@ -47,6 +47,8 @@ export type AdminNavItem = {
   parent?: string;
   /** The breadcrumb label when it differs from the sidebar's ("Categories"). */
   crumbLabel?: string;
+  /** NavIcon key, for an item drawn as a top-level link (a `flat` module's). */
+  icon?: string;
   /**
    * Hidden from everyone but a super admin, whatever their permissions say.
    *
@@ -67,6 +69,18 @@ export type AdminNavModule = {
   exact?: boolean;
   permission?: PermissionKey | PermissionKey[];
   items?: AdminNavItem[];
+  /**
+   * The sidebar heading this module sits under (WEBSITE, GROWTH…). Purely
+   * visual: it groups modules for the eye and changes nothing about routes,
+   * breadcrumbs or permissions.
+   */
+  section?: string;
+  /**
+   * Draw the items as top-level links under the section heading instead of a
+   * collapsible group — for a module whose heading already says what it is.
+   * The breadcrumb still reads "Locations › Cities".
+   */
+  flat?: boolean;
 };
 
 export const ADMIN_NAV: AdminNavModule[] = [
@@ -80,6 +94,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'website',
+    section: 'Website',
     label: 'Website',
     icon: 'layout',
     items: [
@@ -120,6 +135,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'products',
+    section: 'Website',
     label: 'Products',
     icon: 'package',
     items: [
@@ -170,6 +186,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'content',
+    section: 'Website',
     label: 'Content',
     icon: 'file',
     items: [
@@ -221,6 +238,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'crm',
+    section: 'Customers',
     label: 'Leads & CRM',
     icon: 'inbox',
     items: [
@@ -276,6 +294,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'marketing',
+    section: 'Growth',
     label: 'Marketing',
     icon: 'megaphone',
     items: [
@@ -314,6 +333,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'seo',
+    section: 'Growth',
     label: 'SEO',
     icon: 'search',
     items: [
@@ -341,6 +361,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'reports',
+    section: 'Growth',
     label: 'Reports',
     icon: 'chart',
     items: [
@@ -357,18 +378,22 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'locations',
+    section: 'Locations',
+    flat: true,
     label: 'Locations',
     icon: 'map-pin',
     items: [
       {
         label: 'Countries',
         href: '/admin/settings/countries',
+        icon: 'globe',
         permission: 'settings.manage',
         description: 'Storefronts, URL prefixes, currencies and local contact details',
       },
       {
         label: 'Cities',
         href: '/admin/cities',
+        icon: 'map-pin',
         permission: 'pages.view',
         description: 'Local address spaces inside each market, such as /delhi',
         notMatches: ['/admin/cities/generator'],
@@ -376,6 +401,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
       {
         label: 'City Page Generator',
         href: '/admin/cities/generator',
+        icon: 'shuffle',
         permission: 'pages.create',
         description: 'Copy a page into many cities at once',
       },
@@ -383,6 +409,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'administration',
+    section: 'Admin',
     label: 'Administration',
     icon: 'users',
     items: [
@@ -409,6 +436,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'system',
+    section: 'Admin',
     label: 'System',
     icon: 'server',
     items: [
@@ -436,6 +464,7 @@ export const ADMIN_NAV: AdminNavModule[] = [
   },
   {
     id: 'settings',
+    section: 'Admin',
     label: 'Settings',
     icon: 'settings',
     items: [

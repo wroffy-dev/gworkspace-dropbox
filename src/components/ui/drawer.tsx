@@ -76,7 +76,8 @@ export function Drawer({
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-2xl',
+          // A mild glass shell around a solid body (DESIGN.md §28).
+          'admin-glass-rail relative z-10 flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-2xl',
           'animate-slide-up sm:max-h-none sm:h-full sm:rounded-none sm:rounded-l-2xl',
           width === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-xl',
         )}
@@ -97,7 +98,7 @@ export function Drawer({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-surface px-5 py-4">{children}</div>
         {footer ? (
           <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-5 py-3.5">
             {footer}

@@ -113,6 +113,30 @@ describe('admin navigation', () => {
     expect(labels('settings')).toEqual(['Website Settings', 'Email Settings']);
   });
 
+  it('groups the sidebar under the design system’s section headings', () => {
+    // Consecutive modules sharing a heading collapse into one section.
+    const sections: Array<{ heading: string; modules: string[] }> = [];
+    for (const group of ADMIN_NAV) {
+      if (!group.section) continue;
+      const last = sections[sections.length - 1];
+      if (last && last.heading === group.section) last.modules.push(group.label);
+      else sections.push({ heading: group.section, modules: [group.label] });
+    }
+    expect(sections).toEqual([
+      { heading: 'Website', modules: ['Website', 'Products', 'Content'] },
+      { heading: 'Customers', modules: ['Leads & CRM'] },
+      { heading: 'Growth', modules: ['Marketing', 'SEO', 'Reports'] },
+      { heading: 'Locations', modules: ['Locations'] },
+      { heading: 'Admin', modules: ['Administration', 'System', 'Settings'] },
+    ]);
+    // Locations' screens are links of their own, each with an icon, while the
+    // breadcrumb still names the module.
+    const locations = ADMIN_NAV.find((group) => group.id === 'locations')!;
+    expect(locations.flat).toBe(true);
+    expect(locations.items!.every((entry) => Boolean(entry.icon))).toBe(true);
+    expect(trail('/admin/cities')).toBe('Locations > Cities');
+  });
+
   it('lists each destination once', () => {
     const hrefs = ADMIN_NAV.flatMap((group) => group.items ?? []).map((entry) => entry.href);
     expect(new Set(hrefs).size).toBe(hrefs.length);

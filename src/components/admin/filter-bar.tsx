@@ -154,8 +154,10 @@ export function FilterBar({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+      {/* Search and filters share one subtle glass toolbar (DESIGN.md §17). */}
+      <div className="admin-glass-card flex flex-wrap items-center gap-2 rounded-[var(--admin-radius-card-sm,0.75rem)] border border-hairline bg-surface p-2">
+        {/* Never narrower than a usable search box: the filters wrap instead. */}
+        <div className="relative min-w-0 flex-1 basis-full sm:max-w-xs sm:basis-56 sm:min-w-[14rem]">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
             aria-hidden="true"

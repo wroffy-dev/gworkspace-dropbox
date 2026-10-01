@@ -4,7 +4,12 @@ import { cn } from '@/lib/utils/cn';
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('rounded-xl border border-hairline bg-surface shadow-sm', className)}
+      className={cn(
+        // Solid on purpose: cards hold tables and forms, where readability wins.
+        'rounded-[var(--admin-radius-card,0.75rem)] border border-hairline bg-surface',
+        'shadow-[var(--admin-shadow-sm,0_1px_2px_rgb(0_0_0/0.05))]',
+        className,
+      )}
       {...props}
     />
   );

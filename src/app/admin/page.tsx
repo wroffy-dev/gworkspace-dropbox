@@ -85,6 +85,16 @@ export default async function AdminDashboard({
     ]);
 
   const [pagesCount, productsCount, customersCount, submissionsCount] = counts;
+
+  // The 30-day series the lead chart already uses: its second half against its
+  // first gives the KPI's trend, so the card needs no extra query.
+  const daily = metrics.trend.map((point) => point.count);
+  const half = Math.floor(daily.length / 2);
+  const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
+  const previousLeads = sum(daily.slice(0, half));
+  const recentLeadCount = sum(daily.slice(half));
+  const leadTrend =
+    previousLeads > 0 ? ((recentLeadCount - previousLeads) / previousLeads) * 100 : null;
   const needsAttention = actionItems.filter((item) => item.tone === 'attention' && item.count > 0);
   const outstandingSetup = setupChecks.filter((check) => !check.configured);
 
@@ -127,6 +137,9 @@ export default async function AdminDashboard({
               hint={`${formatNumber(metrics.newThisMonth)} this month`}
               href="/admin/leads"
               icon="inbox"
+              trend={leadTrend}
+              trendLabel={`last ${daily.length - half} days vs the ${half} before`}
+              sparkline={daily}
             />
             <StatCard
               label="New today"
