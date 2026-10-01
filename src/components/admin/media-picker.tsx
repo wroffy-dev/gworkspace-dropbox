@@ -65,7 +65,12 @@ export function MediaPicker({
             </span>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-content">
+            {/* A filename has no spaces to wrap at, so it may break anywhere;
+                two lines show most of it, and the tooltip has the rest. */}
+            <p
+              title={selected.title || selected.filename}
+              className="line-clamp-2 break-all text-sm font-medium text-content"
+            >
               {selected.title || selected.filename}
             </p>
             <p className="text-xs text-muted">

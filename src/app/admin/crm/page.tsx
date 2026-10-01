@@ -123,7 +123,7 @@ export default async function CrmDashboard({
         ))}
       </section>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader
             title="Leads over time"

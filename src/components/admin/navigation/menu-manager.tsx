@@ -89,7 +89,7 @@ export function MenuManager({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <div>
         <nav aria-label="Menus" className="rounded-xl border border-hairline bg-surface p-2">
           <ul className="space-y-0.5">

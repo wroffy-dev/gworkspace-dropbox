@@ -202,7 +202,7 @@ export function FormBuilder({
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-[13rem_1fr_23rem]">
+    <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-[13rem_minmax(0,1fr)_23rem]">
       {/* Left: what you can add. */}
       {canEdit ? (
         <div className="min-w-0 xl:order-1">
@@ -1271,7 +1271,7 @@ function ConditionsEditor({
 
           <ul className="space-y-2">
             {conditions.map((condition, index) => (
-              <li key={index} className="grid gap-2 sm:grid-cols-[1fr_auto_1fr_auto]">
+              <li key={index} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto]">
                 <Input
                   value={condition.field}
                   aria-label={`Condition ${index + 1} field name`}

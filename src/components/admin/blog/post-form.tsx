@@ -223,7 +223,7 @@ export function PostForm({
   );
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+    <form onSubmit={onSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="min-w-0 xl:order-1">
         <Card>
           <AdminTabs tabs={TABS} active={tab} onChange={setTab} className="px-3" />

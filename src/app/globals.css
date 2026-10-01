@@ -1839,6 +1839,18 @@
   border-radius: 10px;
 }
 
+/*
+ * Long content must wrap or truncate, never widen the page.
+ *
+ * A <fieldset> defaults to `min-inline-size: min-content`, so one long
+ * unbreakable string inside it — a media filename, a URL — made the whole form
+ * column as wide as that string and pushed the page sideways, sliding the
+ * content under the sidebar. Every admin form groups its fields in one.
+ */
+.admin-ui fieldset {
+  min-inline-size: 0;
+}
+
 /* Inputs, selects and textareas share one radius and one height (§15, §17). */
 .admin-ui .ui-control {
   border-radius: var(--admin-radius-control);

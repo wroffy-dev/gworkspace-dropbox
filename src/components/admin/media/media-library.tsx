@@ -174,7 +174,7 @@ export function MediaLibrary({
   const orderedFolders = flattenTree(folders, (a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[15rem_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
       {/* Folder tree. Above the library on small screens, beside it on large. */}
       <aside className="rounded-xl border border-hairline bg-surface p-2 lg:sticky lg:top-20 lg:self-start">
         <FolderSidebar
@@ -649,7 +649,7 @@ function MediaDetail({
           </>
         }
       >
-        <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_1fr]">
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
           <div>
             {media.kind === 'IMAGE' ? (
               // eslint-disable-next-line @next/next/no-img-element

@@ -21,7 +21,7 @@ export function SettingsSection({
   actions?: React.ReactNode;
 }) {
   return (
-    <section className={cn('grid gap-5 py-6 lg:grid-cols-[16rem_1fr] lg:gap-10', className)}>
+    <section className={cn('grid gap-5 py-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10', className)}>
       <div className="lg:pt-1">
         <h2 className="font-heading text-sm font-semibold text-content">{title}</h2>
         {description ? (

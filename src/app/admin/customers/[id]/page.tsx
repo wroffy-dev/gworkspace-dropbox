@@ -77,7 +77,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         crumbs={[{ label: 'Customers', href: '/admin/customers' }, { label: `#${customer.reference}` }]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
           <CustomerForm initial={initial} staff={staff} canEdit={canEdit} mode="edit" />
 

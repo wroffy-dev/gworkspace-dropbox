@@ -388,7 +388,7 @@ function BackupDetails({ backup, onClose }: { backup: BackupDto | null; onClose:
     <Dialog open onClose={onClose} title="Backup details" size="lg">
       <dl className="divide-y divide-hairline text-sm">
         {rows.map(([label, value]) => (
-          <div key={label} className="grid grid-cols-1 gap-1 py-2.5 sm:grid-cols-[12rem_1fr]">
+          <div key={label} className="grid grid-cols-1 gap-1 py-2.5 sm:grid-cols-[12rem_minmax(0,1fr)]">
             <dt className="text-muted">{label}</dt>
             <dd className="min-w-0 text-content">{value}</dd>
           </div>
