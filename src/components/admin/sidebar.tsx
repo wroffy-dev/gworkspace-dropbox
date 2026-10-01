@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { X, ChevronDown, PanelLeftClose, PanelLeftOpen, ExternalLink } from 'lucide-react';
+import { X, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import {
   visibleModules,
   isItemActive,
@@ -211,7 +211,12 @@ export function AdminSidebar({
         >
           <Link
             href="/admin"
-            className="admin-focus flex min-w-0 items-center gap-2.5 rounded-lg"
+            // On the icon rail the expand arrow takes the logo's place: 76px
+            // holds one control, and the arrow is the one that matters there.
+            className={cn(
+              'admin-focus flex min-w-0 items-center gap-2.5 rounded-lg',
+              collapsed && 'lg:hidden',
+            )}
             aria-label={siteName}
           >
             {brandLogo && !collapsed ? (
@@ -245,6 +250,28 @@ export function AdminSidebar({
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />
+          </button>
+
+          {/* Collapse / expand, beside the logo — desktop only; the phone
+              drawer closes with the cross above. */}
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+            title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+            aria-expanded={!collapsed}
+            aria-controls="admin-sidebar"
+            className={cn(
+              'admin-focus hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg lg:flex',
+              'text-admin-nav/60 transition-colors hover:bg-admin-nav/[0.06] hover:text-admin-nav',
+              !collapsed && 'ml-auto',
+            )}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
+            ) : (
+              <PanelLeftClose className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
+            )}
           </button>
         </div>
 
@@ -319,38 +346,6 @@ export function AdminSidebar({
           </ul>
         </nav>
 
-        <div className={cn('space-y-1 border-t border-admin-nav/10 p-3', collapsed && 'lg:px-2')}>
-          <SidebarLink
-            href="/"
-            label="View website"
-            icon="globe"
-            collapsed={collapsed}
-            external
-            onNavigate={onClose}
-          />
-          <button
-            type="button"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
-            title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
-            aria-expanded={!collapsed}
-            aria-controls="admin-sidebar"
-            className={cn(
-              'admin-focus hidden w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm',
-              'text-admin-nav/70 transition-colors hover:bg-admin-nav/[0.06] hover:text-admin-nav lg:flex',
-              collapsed && 'lg:justify-center lg:px-0',
-            )}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-            ) : (
-              <>
-                <PanelLeftClose className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>Collapse</span>
-              </>
-            )}
-          </button>
-        </div>
       </aside>
     </>
   );
@@ -547,7 +542,6 @@ function SidebarLink({
   icon,
   active,
   collapsed,
-  external,
   onNavigate,
 }: {
   href: string;
@@ -555,7 +549,6 @@ function SidebarLink({
   icon: string;
   active?: boolean;
   collapsed: boolean;
-  external?: boolean;
   onNavigate: () => void;
 }) {
   return (
@@ -565,7 +558,6 @@ function SidebarLink({
       aria-current={active ? 'page' : undefined}
       aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
-      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={cn(
         'admin-focus relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
         active
@@ -590,12 +582,6 @@ function SidebarLink({
         )}
       />
       <span className={cn('truncate', collapsed && 'lg:hidden')}>{label}</span>
-      {external && !collapsed ? (
-        <ExternalLink
-          className="ml-auto h-3.5 w-3.5 shrink-0 text-admin-nav/55"
-          aria-hidden="true"
-        />
-      ) : null}
     </Link>
   );
 }
