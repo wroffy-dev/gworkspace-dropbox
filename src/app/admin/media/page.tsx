@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { MediaLibrary } from '@/components/admin/media/media-library';
 import { MEDIA_DTO_SELECT, toMediaDto, type MediaDto } from '@/lib/media/dto';
 import { maxUploadLabel } from '@/lib/services/upload';
+import { formatBytes, formatNumber } from '@/lib/utils/format';
 
 export const metadata: Metadata = { title: 'Media' };
 export const dynamic = 'force-dynamic';
@@ -62,7 +63,7 @@ export default async function MediaAdmin({
     <>
       <AdminPageHeader
         title="Media"
-        description={`${usedBytes._count._all} file(s) · ${((usedBytes._sum.size ?? 0) / 1024 / 1024).toFixed(1)} MB stored`}
+        description={`${formatNumber(usedBytes._count._all)} ${usedBytes._count._all === 1 ? 'file' : 'files'} · ${formatBytes(usedBytes._sum.size ?? 0)} stored`}
         crumbs={[{ label: 'Media' }]}
       />
       <MediaLibrary

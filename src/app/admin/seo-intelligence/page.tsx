@@ -353,8 +353,9 @@ function SummaryCards({
 
   return (
     <div className="mb-6 space-y-4">
+      {/* Score cards are glass (DESIGN.md §19); the audit table below stays solid. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <Card className="p-4 sm:p-5">
+        <Card className="admin-glass-card p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-content">Overall site score</h2>
@@ -377,7 +378,7 @@ function SummaryCards({
           )}
         </Card>
 
-        <Card className="p-4 sm:p-5">
+        <Card className="admin-glass-card p-4 sm:p-5">
           <div className="grid grid-cols-3 gap-3">
             <Metric label="Indexable URLs" value={summary.indexable} hint={`of ${formatNumber(summary.total)} scored`} />
             <Metric
@@ -410,7 +411,7 @@ function SummaryCards({
                   <span className="block text-xs text-muted">{item.label}</span>
                   <span
                     className={cn(
-                      'block font-heading text-xl font-bold tabular-nums',
+                      'block font-heading text-xl font-semibold tabular-nums',
                       item.value > 0 ? 'text-content' : 'text-muted',
                     )}
                   >

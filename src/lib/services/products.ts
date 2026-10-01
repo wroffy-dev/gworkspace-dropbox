@@ -397,3 +397,23 @@ export const getVariantPricing = cache(
       .filter((variant) => variant.isAvailable);
   },
 );
+
+/**
+ * The products a market counts as removed: retired everywhere, or withdrawn
+ * from this market only. The Removed Products list and the Products screen's
+ * "Removed" figure both read this, so the number and the list always agree.
+ */
+export function removedProductsWhere(countryId: string): Prisma.ProductWhereInput {
+  return {
+    OR: [
+      // Retired: no market offers it.
+      { deletedAt: { not: null } },
+      // Withdrawn from this market only.
+      {
+        deletedAt: null,
+        countries: { some: { countryId, deletedAt: { not: null } } },
+      },
+    ],
+  };
+}
+
