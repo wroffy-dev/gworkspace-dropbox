@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
+// `ui-control` is a marker: inside the admin it picks up the admin's control
+// radius (see `.admin-ui .ui-control`); on the public site it does nothing.
 export const inputClasses =
-  'w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-content shadow-sm ' +
+  'ui-control w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-content shadow-sm ' +
   'placeholder:text-muted/60 transition-colors ' +
   'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25 ' +
   'disabled:cursor-not-allowed disabled:bg-muted/5 disabled:text-muted ' +

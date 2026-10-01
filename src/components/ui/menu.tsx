@@ -97,7 +97,8 @@ export function Menu({
           onClick={() => setOpen(false)}
           className={cn(
             'absolute top-full z-dropdown mt-1.5 animate-slide-up overflow-hidden rounded-xl border border-hairline',
-            'bg-surface p-1.5 shadow-xl',
+            // Frosted inside the admin; a plain white menu anywhere else.
+            'admin-glass-menu bg-surface p-1.5 shadow-xl',
             width,
             align === 'right' ? 'right-0' : 'left-0',
           )}

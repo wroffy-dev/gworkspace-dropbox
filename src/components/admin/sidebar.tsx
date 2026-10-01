@@ -60,9 +60,9 @@ export function AdminSidebar({
 
   const modules = React.useMemo(() => visibleModules(can, isSuperAdmin), [can, isSuperAdmin]);
 
-  // The rail is dark, so the dark-surface logo from Website settings is the
-  // right one here — the same preference the public footer already makes.
-  const brandLogo = logoDarkUrl || logoUrl;
+  // The rail is a light glass surface, so the ordinary logo from Website
+  // settings is the right one; the dark-surface logo is the fallback.
+  const brandLogo = logoUrl || logoDarkUrl;
 
   // The same answer the breadcrumbs give, detail routes (/admin/pages/abc)
   // included, so the open module and the trail can never disagree.
@@ -177,7 +177,7 @@ export function AdminSidebar({
     <>
       {open ? (
         <div
-          className="fixed inset-0 z-backdrop bg-[rgb(var(--admin-header-bg))]/60 backdrop-blur-[1px] lg:hidden"
+          className="fixed inset-0 z-backdrop bg-[rgb(var(--shadow-ink))]/30 backdrop-blur-[2px] lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -187,9 +187,12 @@ export function AdminSidebar({
         ref={asideRef}
         id="admin-sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 flex flex-col border-r border-admin-nav/10 bg-admin-sidebar',
+          // A floating glass rail on large screens, inset from the window edge
+          // with the shell's radius; a full-height drawer on small ones.
+          'admin-glass-rail fixed inset-y-0 left-0 flex flex-col overflow-hidden rounded-r-[20px]',
+          'lg:inset-y-3 lg:left-3 lg:rounded-[var(--admin-radius-shell)]',
           'transition-[transform,width] duration-200 ease-out lg:translate-x-0',
-          collapsed ? 'w-64 lg:w-[4.5rem]' : 'w-64',
+          collapsed ? 'w-64 lg:w-[4.75rem]' : 'w-64',
           open ? 'translate-x-0' : '-translate-x-full',
           // One element, two roles: an off-canvas drawer on small screens (so
           // it must clear the backdrop and the top bar) and a docked column on
@@ -252,8 +255,42 @@ export function AdminSidebar({
           )}
         >
           <ul className="space-y-1">
-            {modules.map((group) => (
-              <li key={group.id}>
+            {modules.map((group, index) => (
+              <React.Fragment key={group.id}>
+                {group.section && group.section !== modules[index - 1]?.section ? (
+                  <li
+                    aria-hidden={collapsed ? true : undefined}
+                    className={cn(index > 0 && 'pt-3')}
+                  >
+                    {/* A heading on the full rail; a hairline on the icon rail. */}
+                    <p
+                      className={cn(
+                        'px-3 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-admin-nav/45',
+                        collapsed && 'lg:hidden',
+                      )}
+                    >
+                      {group.section}
+                    </p>
+                    {collapsed ? (
+                      <span className="mx-3 hidden h-px bg-admin-nav/10 lg:block" />
+                    ) : null}
+                  </li>
+                ) : null}
+                {group.flat ? (
+                  group.items.map((item) => (
+                    <li key={item.href}>
+                      <SidebarLink
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon ?? group.icon}
+                        active={isItemActive(item, pathname, search)}
+                        collapsed={collapsed}
+                        onNavigate={onClose}
+                      />
+                    </li>
+                  ))
+                ) : (
+              <li>
                 {group.href ? (
                   <SidebarLink
                     href={group.href}
@@ -276,6 +313,8 @@ export function AdminSidebar({
                   />
                 )}
               </li>
+                )}
+              </React.Fragment>
             ))}
           </ul>
         </nav>
@@ -376,8 +415,8 @@ function SidebarModule({
           className={cn(
             'admin-focus relative flex h-10 w-full items-center justify-center rounded-lg transition-colors',
             isActiveModule
-              ? 'bg-admin-nav/[0.08] text-admin-nav'
-              : 'text-admin-nav/70 hover:bg-admin-nav/[0.06] hover:text-admin-nav',
+              ? 'bg-surface text-admin-nav shadow-[var(--admin-shadow-sm)] ring-1 ring-admin-nav/[0.06]'
+              : 'text-admin-nav/70 hover:bg-admin-nav/[0.05] hover:text-admin-nav',
           )}
         >
           {/* The rail has no room for a label, so the active module is marked
@@ -397,7 +436,7 @@ function SidebarModule({
           style={flyout ? { top: flyout.top, left: flyout.left } : undefined}
           className={cn(
             'pointer-events-none fixed z-tooltip ml-2 w-56 origin-left scale-95 opacity-0',
-            'rounded-xl border border-admin-nav/10 bg-admin-sidebar p-1.5 shadow-xl ring-1 ring-black/20 transition',
+            'admin-glass-menu p-1.5 transition',
             // Nothing to anchor to until the row has been measured.
             flyout ? 'block' : 'hidden',
             'group-hover/group:pointer-events-auto group-hover/group:scale-100 group-hover/group:opacity-100',
@@ -419,8 +458,8 @@ function SidebarModule({
                     className={cn(
                       'admin-focus block truncate rounded-lg px-2.5 py-2 text-sm transition-colors',
                       active
-                        ? 'bg-admin-nav/[0.08] font-medium text-admin-nav'
-                        : 'text-admin-nav/70 hover:bg-admin-nav/[0.06] hover:text-admin-nav',
+                        ? 'bg-surface font-medium text-admin-nav shadow-[var(--admin-shadow-sm)] ring-1 ring-admin-nav/[0.06]'
+                        : 'text-admin-nav/70 hover:bg-admin-nav/[0.05] hover:text-admin-nav',
                     )}
                   >
                     {item.label}
@@ -487,8 +526,8 @@ function SidebarModule({
                   className={cn(
                     'admin-focus block truncate rounded-lg px-2.5 py-1.5 text-[0.8125rem] transition-colors',
                     active
-                      ? 'bg-admin-nav/[0.08] font-medium text-admin-nav'
-                      : 'text-admin-nav/70 hover:bg-admin-nav/[0.06] hover:text-admin-nav',
+                      ? 'bg-surface font-medium text-admin-nav shadow-[var(--admin-shadow-sm)] ring-1 ring-admin-nav/[0.06]'
+                      : 'text-admin-nav/70 hover:bg-admin-nav/[0.05] hover:text-admin-nav',
                   )}
                 >
                   {item.label}
@@ -530,8 +569,8 @@ function SidebarLink({
       className={cn(
         'admin-focus relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
         active
-          ? 'bg-admin-nav/[0.08] font-medium text-admin-nav'
-          : 'text-admin-nav/80 hover:bg-admin-nav/[0.06] hover:text-admin-nav',
+          ? 'bg-surface font-medium text-admin-nav shadow-[var(--admin-shadow-sm)] ring-1 ring-admin-nav/[0.06]'
+          : 'text-admin-nav/75 hover:bg-admin-nav/[0.05] hover:text-admin-nav',
         collapsed && 'lg:justify-center lg:px-0 lg:py-2.5',
       )}
     >

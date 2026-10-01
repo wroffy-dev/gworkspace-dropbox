@@ -280,7 +280,8 @@
   */
   .admin-focus {
     @apply focus-visible:outline-none focus-visible:ring-2;
-    --tw-ring-color: rgb(var(--admin-nav-fg) / 0.65);
+    /* Focus rings are one of the few places the brand colour belongs. */
+    --tw-ring-color: rgb(var(--brand-primary) / 0.6);
     --tw-ring-offset-color: rgb(var(--admin-sidebar-bg));
     @apply focus-visible:ring-offset-2;
   }
@@ -1672,3 +1673,188 @@
     width: 3rem;
   }
 }
+
+/* ==========================================================================
+   Admin design system — "clean SaaS + controlled Liquid Glass".
+
+   Everything below is scoped to `.admin-ui`, the class the admin shell puts on
+   its root and on <body> while it is mounted (so dialogs and menus portalled
+   to <body> are themed too). The public site never carries the class, so its
+   colours, fonts, radii and buttons are exactly what Website design says.
+
+   Unlayered and after the utilities on purpose: a scoped rule here overrides
+   a component's Tailwind class by order and specificity, never `!important`.
+
+   Rules of thumb (DESIGN.md §2, §7):
+   - Glass on the chrome: topbar, sidebar, menus, KPI cards, toolbars, drawers,
+     sticky save bars. Never on tables, long forms, editors or canvases.
+   - Text on glass keeps the solid text tokens, so contrast never depends on
+     what happens to be behind it.
+   ========================================================================== */
+
+.admin-ui {
+  /* Base palette (DESIGN.md §8). The brand channels the admin's Tailwind
+     classes read (`text-content`, `text-muted`, `border-hairline`,
+     `bg-surface`) are re-pointed here, so every admin screen picks the system
+     up without touching its markup. The brand colour itself is left alone —
+     it stays the accent: active nav, selected tabs, focus rings, links. */
+  --brand-text: 17 24 39;
+  --brand-muted: 99 104 115;
+  --brand-border: 229 231 235;
+  --brand-background: 255 255 255;
+
+  --admin-bg: 245 246 248;
+  --admin-surface: 255 255 255;
+  --admin-surface-soft: 250 250 251;
+  --admin-text: 17 24 39;
+  --admin-text-muted: 99 104 115;
+  --admin-primary: 17 17 17;
+  --admin-primary-fg: 255 255 255;
+
+  /* The shell is light now: the same tokens the dark chrome was built on, so
+     the sidebar, topbar, breadcrumbs and search follow without new classes. */
+  --admin-workspace-bg: 245 246 248;
+  --admin-sidebar-bg: 255 255 255;
+  --admin-header-bg: 255 255 255;
+  --admin-nav-fg: 17 24 39;
+  --admin-border: rgb(17 24 39 / 0.08);
+  --admin-nav-muted: rgb(17 24 39 / 0.7);
+  --admin-nav-subtle: rgb(17 24 39 / 0.5);
+  --admin-nav-hover: rgb(17 24 39 / 0.05);
+  --admin-nav-active: rgb(17 24 39 / 0.07);
+  --admin-nav-guide: rgb(17 24 39 / 0.1);
+
+  /* Radius system (§10). */
+  --admin-radius-shell: 24px;
+  --admin-radius-card: 18px;
+  --admin-radius-card-sm: 14px;
+  --admin-radius-control: 12px;
+  --admin-radius-menu: 14px;
+
+  /* Depth (§11): border + soft shadow, never a heavy drop shadow. */
+  --admin-shadow-sm: 0 1px 2px rgb(17 24 39 / 0.04), 0 1px 3px rgb(17 24 39 / 0.03);
+  --admin-shadow-md: 0 2px 6px rgb(17 24 39 / 0.04), 0 10px 28px rgb(17 24 39 / 0.06);
+  --admin-shadow-lg: 0 6px 16px rgb(17 24 39 / 0.06), 0 28px 64px rgb(17 24 39 / 0.12);
+
+  /* Typography (§9): a clean system sans-serif in the admin, whatever font
+     the public site was given, at calm weights. */
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-body: var(--font-heading);
+  --font-heading-weight: 600;
+  --font-heading-leading: 1.25;
+  --font-heading-tracking: -0.011em;
+  --font-body-weight: 400;
+  --font-body-leading: 1.5;
+  --font-body-tracking: normal;
+
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: normal;
+  color: rgb(var(--admin-text));
+}
+
+/* --- Glass surfaces -------------------------------------------------------- */
+
+/* The topbar: the strongest glass in the admin (§6). */
+.admin-ui .admin-glass-bar {
+  background: rgb(var(--glass-tint) / 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgb(var(--glass-tint) / 0.7);
+  box-shadow:
+    0 1px 2px rgb(var(--shadow-ink) / 0.04),
+    0 8px 24px rgb(var(--shadow-ink) / 0.06),
+    inset 0 1px 0 rgb(var(--glass-tint) / 0.8);
+}
+
+/* The sidebar shell (§5): translucent, never extreme. */
+.admin-ui .admin-glass-rail {
+  background: rgb(var(--glass-tint) / 0.68);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid rgb(var(--glass-tint) / 0.7);
+  box-shadow:
+    0 1px 2px rgb(var(--shadow-ink) / 0.04),
+    0 12px 32px rgb(var(--shadow-ink) / 0.06),
+    inset 0 1px 0 rgb(var(--glass-tint) / 0.8);
+}
+
+/* KPI cards and toolbars: light glass over the workspace. */
+.admin-ui .admin-glass-card {
+  background: rgb(var(--glass-tint) / 0.7);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgb(var(--glass-tint) / 0.75);
+  box-shadow:
+    var(--admin-shadow-sm),
+    inset 0 1px 0 rgb(var(--glass-tint) / 0.85);
+}
+
+/* Menus, popovers and fly-outs sit over content of any colour, so they are
+   the most opaque glass. */
+.admin-ui .admin-glass-menu {
+  background: rgb(var(--glass-tint) / 0.86);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgb(var(--brand-border) / 0.9);
+  box-shadow: var(--admin-shadow-lg);
+  border-radius: var(--admin-radius-menu);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .admin-ui .admin-glass-bar,
+  .admin-ui .admin-glass-rail,
+  .admin-ui .admin-glass-card,
+  .admin-ui .admin-glass-menu {
+    background: rgb(var(--glass-tint) / 0.97);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .admin-ui .admin-glass-bar,
+  .admin-ui .admin-glass-rail,
+  .admin-ui .admin-glass-card,
+  .admin-ui .admin-glass-menu {
+    background: rgb(var(--glass-tint) / 0.97);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* --- Shared primitives, admin look ---------------------------------------- */
+
+/* Primary buttons are near-black (§29); the brand colour stays an accent.
+   `btn-tokens` marks the public site's buttons, which keep Website design. */
+.admin-ui .btn-role-primary:not(.btn-tokens) {
+  background-color: rgb(var(--admin-primary));
+  color: rgb(var(--admin-primary-fg));
+}
+.admin-ui .btn-role-primary:not(.btn-tokens):hover {
+  background-color: rgb(var(--admin-primary) / 0.86);
+}
+.admin-ui :is(.btn-md, .btn-lg):not(.btn-tokens) {
+  border-radius: var(--admin-radius-control);
+}
+.admin-ui .btn-sm:not(.btn-tokens) {
+  border-radius: 10px;
+}
+
+/* Inputs, selects and textareas share one radius and one height (§15, §17). */
+.admin-ui .ui-control {
+  border-radius: var(--admin-radius-control);
+  border-color: rgb(var(--brand-border));
+  box-shadow: 0 1px 2px rgb(var(--shadow-ink) / 0.03);
+}
+
+/* Dialog shells: the shell's radius and depth; the body stays solid. */
+.admin-ui .ui-dialog {
+  border-radius: 20px;
+  box-shadow: var(--admin-shadow-lg);
+}
+@media (max-width: 639px) {
+  .admin-ui .ui-dialog {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+

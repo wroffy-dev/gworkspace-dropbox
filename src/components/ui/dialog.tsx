@@ -96,7 +96,8 @@ export function Dialog({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative z-10 flex max-h-[92dvh] w-full animate-slide-up flex-col',
+          // `ui-dialog` lets the admin give its dialogs the shell's radius and depth.
+          'ui-dialog relative z-10 flex max-h-[92dvh] w-full animate-slide-up flex-col',
           glass
             ? 'liquid-glass rounded-b-none sm:rounded-b-[20px]'
             : 'rounded-t-2xl bg-surface shadow-2xl sm:rounded-2xl',

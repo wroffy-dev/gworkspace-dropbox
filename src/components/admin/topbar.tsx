@@ -66,8 +66,12 @@ export function AdminTopbar({
   const createOptions = QUICK_CREATE.filter((option) => can(option.permission));
 
   return (
-    <header className="sticky top-0 z-topbar border-b border-admin-nav/10 bg-admin-header text-admin-nav">
-      <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 sm:px-6">
+    // A floating glass bar: the strongest glass in the admin, so the page
+    // scrolling underneath reads as depth rather than clutter. The <header>
+    // itself is transparent and only spaces the bar from the window edge.
+    <header className="sticky top-0 z-topbar px-2 pt-2 text-admin-nav sm:px-3 lg:pl-3 lg:pr-6 lg:pt-3">
+      <div className="admin-glass-bar rounded-[20px]">
+      <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-4">
         <button
           type="button"
           onClick={onOpenSidebar}
@@ -96,8 +100,11 @@ export function AdminTopbar({
             trigger={
               <span
                 className={cn(
-                  'inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-sm font-medium text-white',
-                  'shadow-sm transition-colors hover:bg-brand/90',
+                  // The primary action: near-black, like every primary button
+                  // in the admin; the brand colour stays an accent.
+                  'inline-flex h-9 items-center gap-1.5 rounded-[var(--admin-radius-control)] px-3 text-sm font-medium',
+                  'bg-[rgb(var(--admin-primary))] text-[rgb(var(--admin-primary-fg))] shadow-sm transition-colors',
+                  'hover:bg-[rgb(var(--admin-primary))]/85',
                 )}
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
@@ -117,6 +124,17 @@ export function AdminTopbar({
             ))}
           </Menu>
         ) : null}
+
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="View website"
+          aria-label="View website (opens in a new tab)"
+          className="admin-focus admin-focus-header hidden h-9 w-9 shrink-0 items-center justify-center rounded-[var(--admin-radius-control)] text-admin-nav/70 transition-colors hover:bg-admin-nav/[0.06] hover:text-admin-nav md:flex"
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        </a>
 
         <Menu
           align="right"
@@ -183,8 +201,10 @@ export function AdminTopbar({
       </div>
 
       {/* Breadcrumbs move below the bar on small screens so they stay readable. */}
-      <div className="border-t border-admin-nav/10 px-4 py-2 lg:hidden">
+      {/* `empty:hidden`: a screen with no trail (the dashboard) gets no strip. */}
+      <div className="border-t border-admin-nav/10 px-4 py-2 empty:hidden lg:hidden">
         <AdminBreadcrumbs can={can} isSuperAdmin={isSuperAdmin} />
+      </div>
       </div>
     </header>
   );

@@ -61,7 +61,8 @@ export function QuickActions({ can }: { can: (permission: PermissionKey) => bool
   if (visible.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    // As many columns as fit the card, so a label is never cut to "Creat…".
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2">
       {visible.map((action) => (
         <Link
           key={action.href}

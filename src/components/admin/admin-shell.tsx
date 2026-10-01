@@ -58,9 +58,20 @@ export function AdminShell({
 
   const isCollapsed = ready && collapsed;
 
+  /*
+   * The admin theme is scoped to `.admin-ui`. Dialogs, drawers and menus are
+   * portalled to <body>, outside the shell's own element, so <body> carries
+   * the class too while the admin is mounted — and gives it back when it
+   * unmounts, so nothing of the admin's look reaches a public page.
+   */
+  React.useEffect(() => {
+    document.body.classList.add('admin-ui');
+    return () => document.body.classList.remove('admin-ui');
+  }, []);
+
   return (
     <SessionProvider>
-      <div className="min-h-screen bg-admin-workspace">
+      <div className="admin-ui min-h-screen bg-admin-workspace">
         <a href="#admin-main" className="skip-link">
           Skip to content
         </a>
@@ -80,7 +91,9 @@ export function AdminShell({
         <div
           className={cn(
             'transition-[padding] duration-200 ease-out',
-            isCollapsed ? 'lg:pl-[4.5rem]' : 'lg:pl-64',
+            // The rail floats 12px in from the edge, so the content clears its
+            // width plus both gaps.
+            isCollapsed ? 'lg:pl-[6.25rem]' : 'lg:pl-[17.5rem]',
           )}
         >
           <AdminTopbar
@@ -95,7 +108,10 @@ export function AdminShell({
             countries={countries}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
-          <main id="admin-main" className="mx-auto w-full max-w-[100rem] px-4 py-6 sm:px-6 sm:py-8">
+          <main
+            id="admin-main"
+            className="mx-auto w-full max-w-[100rem] px-4 py-6 sm:px-6 sm:py-8 lg:pl-3"
+          >
             {children}
           </main>
         </div>

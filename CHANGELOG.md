@@ -12,6 +12,22 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Admin design system, phase 1** (`docs/ADMIN-DESIGN-SYSTEM.md`): clean SaaS
+  with controlled Liquid Glass, scoped to the admin by an `.admin-ui` class
+  so the public site's colours, fonts, radii and buttons are untouched.
+  - Shell: a floating light-glass sidebar (256px, 76px collapsed) grouped
+    under WEBSITE, CUSTOMERS, GROWTH, LOCATIONS and ADMIN — Countries, Cities
+    and the City Page Generator as direct links — and a floating glass topbar
+    with a View website action.
+  - Tokens for the palette, radii (cards 18px, controls 12px, menus 14px),
+    depth and a system sans-serif; near-black primary buttons with the brand
+    colour kept for accents, active states and focus rings.
+  - Glass KPI cards with a trend and a sparkline (the dashboard's Total leads
+    compares the last 15 days with the 15 before), glass dropdown menus,
+    filter toolbars and drawer shells; tables, forms and editors stay solid.
+  - Page headers wrap their actions under the title rather than squeezing
+    it; the list search keeps a usable width; Quick actions no longer cut
+    their labels short.
 - **Image section editor with live preview** (Pages → a page → an Image
   section). The Content tab shows the image beside its controls — side by side
   when the editor is wide, stacked on tablets and phones — and redraws as you
