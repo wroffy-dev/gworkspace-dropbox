@@ -103,8 +103,15 @@ export function SlugManager({
         onSwitchOff={() => setResolver(false)}
       />
 
-      <div className="mt-5 rounded-2xl border border-hairline bg-surface shadow-sm">
-        <AdminTabs tabs={tabs} active={tab} onChange={(id) => go(id as ManagerTab)} className="px-2 sm:px-4" />
+      <div className="mt-5 rounded-[var(--admin-radius-card,1rem)] border border-hairline bg-surface shadow-sm">
+        {/* Sticky under the topbar on desktop, so switching tool never means
+            scrolling back up a long URL list (DESIGN.md §26). */}
+        <AdminTabs
+          tabs={tabs}
+          active={tab}
+          onChange={(id) => go(id as ManagerTab)}
+          className="z-sticky rounded-t-[var(--admin-radius-card,1rem)] bg-surface/95 px-2 backdrop-blur sm:px-4 lg:sticky lg:top-[4.375rem]"
+        />
         {MANAGER_TABS.map((id) =>
           visited.has(id) ? (
             <div

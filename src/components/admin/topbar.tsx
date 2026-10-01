@@ -69,7 +69,9 @@ export function AdminTopbar({
     // A floating glass bar: the strongest glass in the admin, so the page
     // scrolling underneath reads as depth rather than clutter. The <header>
     // itself is transparent and only spaces the bar from the window edge.
-    <header className="sticky top-0 z-topbar px-2 pt-2 text-admin-nav sm:px-3 lg:pl-3 lg:pr-6 lg:pt-3">
+    // The strip around the floating bar fades into the workspace colour, so a
+    // page scrolling underneath never shows through the gap above the bar.
+    <header className="sticky top-0 z-topbar bg-gradient-to-b from-admin-workspace from-70% to-admin-workspace/0 px-2 pt-2 text-admin-nav sm:px-3 lg:pl-3 lg:pr-6 lg:pt-3">
       <div className="admin-glass-bar rounded-[20px]">
       <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-4">
         <button

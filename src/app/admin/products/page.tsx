@@ -7,6 +7,8 @@ import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { FilterBar } from '@/components/admin/filter-bar';
+import { StatCard } from '@/components/admin/stat-card';
+import { removedProductsWhere } from '@/lib/services/products';
 import type { FilterDefinition, FilterPreset } from '@/lib/admin/filters';
 import { AdminPagination } from '@/components/admin/admin-pagination';
 import { ProductsTable, type ProductRow } from '@/components/admin/products/products-table';
@@ -78,7 +80,7 @@ export default async function ProductsAdmin({
     };
   }
 
-  const [rows, total, categories, brands] = await Promise.all([
+  const [rows, total, categories, brands, [catalogueTotal, byStatus, removedTotal]] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -130,7 +132,23 @@ export default async function ProductsAdmin({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
     }),
+    // The market's catalogue at a glance — unaffected by the filters below, so
+    // the figures stay put while the list narrows.
+    Promise.all([
+      prisma.product.count({
+        where: { deletedAt: null, countries: { some: { countryId: scope.country.id, deletedAt: null } } },
+      }),
+      prisma.productCountry.groupBy({
+        by: ['status'],
+        where: { countryId: scope.country.id, deletedAt: null, product: { deletedAt: null } },
+        _count: { _all: true },
+      }),
+      prisma.product.count({ where: removedProductsWhere(scope.country.id) }),
+    ]),
   ]);
+
+  const statusCount = (status: string) =>
+    byStatus.find((row) => row.status === status)?._count._all ?? 0;
 
   const can = {
     edit: userCan(user, 'products.edit'),
@@ -250,6 +268,30 @@ export default async function ProductsAdmin({
           </>
         }
       />
+
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total products" value={catalogueTotal} href="/admin/products" icon="package" />
+        <StatCard
+          label="Published"
+          value={statusCount('PUBLISHED')}
+          href="/admin/products?status=PUBLISHED"
+          icon="globe"
+          tone="success"
+        />
+        <StatCard
+          label="Draft"
+          value={statusCount('DRAFT')}
+          href="/admin/products?status=DRAFT"
+          icon="file"
+        />
+        <StatCard
+          label="Removed"
+          value={removedTotal}
+          href="/admin/products/trash"
+          icon="history"
+          hint="Restore from Removed Products"
+        />
+      </div>
 
       <FilterBar
         searchPlaceholder="Search products by name or SKU"

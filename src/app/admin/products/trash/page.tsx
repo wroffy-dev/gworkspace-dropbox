@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
-import type { Prisma } from '@prisma/client';
+import { removedProductsWhere } from '@/lib/services/products';
 import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { getAdminCountryScope } from '@/lib/country/admin';
@@ -31,17 +31,7 @@ export default async function ProductTrashAdmin() {
   const user = await requirePermission('products.view');
   const scope = await getAdminCountryScope();
 
-  const where: Prisma.ProductWhereInput = {
-    OR: [
-      // Retired: no market offers it.
-      { deletedAt: { not: null } },
-      // Withdrawn from this market only.
-      {
-        deletedAt: null,
-        countries: { some: { countryId: scope.country.id, deletedAt: { not: null } } },
-      },
-    ],
-  };
+  const where = removedProductsWhere(scope.country.id);
 
   const rows = await prisma.product.findMany({
     where,

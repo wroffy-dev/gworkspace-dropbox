@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { Plus, Wand2 } from 'lucide-react';
 import { requirePermission, userCan } from '@/lib/auth/guards';
+import { prisma } from '@/lib/db/prisma';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { FilterBar } from '@/components/admin/filter-bar';
+import { StatCard } from '@/components/admin/stat-card';
 import type { FilterDefinition, FilterPreset } from '@/lib/admin/filters';
 import { AdminPagination } from '@/components/admin/admin-pagination';
 import { Card } from '@/components/ui/card';
@@ -38,6 +40,20 @@ export default async function CitiesAdmin({
     page,
     perPage: PER_PAGE,
   });
+
+  // The market's cities at a glance, in the same scope as the list (one market,
+  // or every market this user may see) and unaffected by the filters below.
+  const scope = country.countryId
+    ? { countryId: country.countryId }
+    : { countryId: { in: country.countries.map((row) => row.id) } };
+  const [cityTotal, activeTotal, publishedTotal, cityPageTotal] = await Promise.all([
+    prisma.city.count({ where: scope }),
+    prisma.city.count({ where: { ...scope, isActive: true } }),
+    prisma.city.count({ where: { ...scope, isPublished: true } }),
+    prisma.page.count({ where: { deletedAt: null, city: scope } }),
+  ]);
+  const withCountry = (query: string) =>
+    `/admin/cities?${query}${params.country ? `&country=${encodeURIComponent(params.country)}` : ''}`;
 
   const can = {
     create: userCan(user, 'pages.create'),
@@ -100,6 +116,26 @@ export default async function CitiesAdmin({
           </>
         }
       />
+
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total cities" value={cityTotal} icon="map-pin" />
+        <StatCard
+          label="Active cities"
+          value={activeTotal}
+          href={withCountry('status=active')}
+          icon="activity"
+          tone="success"
+          hint={activeTotal < cityTotal ? `${cityTotal - activeTotal} inactive` : 'All active'}
+        />
+        <StatCard
+          label="Published cities"
+          value={publishedTotal}
+          href={withCountry('status=published')}
+          icon="globe"
+          hint="In search engines and the sitemap"
+        />
+        <StatCard label="City pages" value={cityPageTotal} href="/admin/pages" icon="layout" hint="Ordinary pages in a city’s address space" />
+      </div>
 
       <FilterBar searchPlaceholder="Search cities by name, slug or region" definitions={definitions} presets={presets} />
 

@@ -12,6 +12,18 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Admin design system, phase 2** — module screens (admin only):
+  - **Products**: Total, Published, Draft and Removed for the market being
+    worked in; Removed counts exactly what Removed Products lists (one shared
+    rule).
+  - **Cities**: Total, Active and Published cities and City pages, in the same
+    market scope as the list.
+  - **SEO Intelligence**: score cards on glass; the audit table stays solid.
+  - **Slug & URL Manager**: the tab bar stays under the topbar while a long URL
+    list scrolls (desktop).
+  - **Media**: "4 files · 1.9 KB stored" instead of "4 file(s) · 0.0 MB".
+  - The strip around the floating topbar fades into the workspace, so content
+    no longer shows through above it.
 - **Admin design system, phase 1** (`docs/ADMIN-DESIGN-SYSTEM.md`): clean SaaS
   with controlled Liquid Glass, scoped to the admin by an `.admin-ui` class
   so the public site's colours, fonts, radii and buttons are untouched.
