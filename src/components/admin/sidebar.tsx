@@ -220,12 +220,27 @@ export function AdminSidebar({
             aria-label={siteName}
           >
             {brandLogo && !collapsed ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={brandLogo}
-                alt={siteName}
-                className="h-7 w-auto max-w-[9rem] object-contain"
-              />
+              <>
+                {/* With both logos uploaded, the theme picks one in CSS
+                    (`.admin-logo-light` / `.admin-logo-dark`). */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={brandLogo}
+                  alt={siteName}
+                  className={cn(
+                    'h-7 w-auto max-w-[9rem] object-contain',
+                    logoUrl && logoDarkUrl && 'admin-logo-light',
+                  )}
+                />
+                {logoUrl && logoDarkUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoDarkUrl}
+                    alt={siteName}
+                    className="admin-logo-dark h-7 w-auto max-w-[9rem] object-contain"
+                  />
+                ) : null}
+              </>
             ) : (
               <>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
