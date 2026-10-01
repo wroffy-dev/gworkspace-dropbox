@@ -53,7 +53,7 @@ export function DashboardSkeleton() {
           <Skeleton key={index} className="h-24" />
         ))}
       </div>
-      <div className="mb-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Skeleton className="h-72" />
         <Skeleton className="h-72" />
       </div>

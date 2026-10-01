@@ -117,7 +117,7 @@ export function EmailSettingsForm({
           <CardHeader title="SMTP server" description="Credentials are encrypted before they are stored." />
           <CardBody className="space-y-4">
             <fieldset disabled={!canEdit || pending} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem]">
                 <Field label="Host" htmlFor="smtp-host" error={errors.host}>
                   <Input
                     id="smtp-host"
