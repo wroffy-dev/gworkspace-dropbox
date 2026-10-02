@@ -1754,6 +1754,49 @@
   color: rgb(var(--admin-text));
 }
 
+/*
+ * Admin dark appearance.
+ *
+ * Kept entirely inside the admin token scope so the public website's CMS
+ * colours are unaffected. The palette is deliberately charcoal rather than
+ * pure black: translucent glass needs a little luminance behind it to read as
+ * depth instead of a flat black sheet.
+ */
+.admin-ui[data-admin-theme='dark'] {
+  --brand-text: 243 244 246;
+  --brand-muted: 156 163 175;
+  --brand-border: 55 65 81;
+  --brand-background: 20 24 31;
+
+  --admin-bg: 9 12 16;
+  --admin-surface: 20 24 31;
+  --admin-surface-soft: 26 31 40;
+  --admin-text: 243 244 246;
+  --admin-text-muted: 156 163 175;
+  --admin-primary: 245 245 247;
+  --admin-primary-fg: 17 24 39;
+
+  --admin-workspace-bg: 9 12 16;
+  --admin-sidebar-bg: 17 21 27;
+  --admin-header-bg: 17 21 27;
+  --admin-nav-fg: 243 244 246;
+  --admin-border: rgb(255 255 255 / 0.1);
+  --admin-nav-muted: rgb(243 244 246 / 0.72);
+  --admin-nav-subtle: rgb(243 244 246 / 0.52);
+  --admin-nav-hover: rgb(255 255 255 / 0.07);
+  --admin-nav-active: rgb(255 255 255 / 0.1);
+  --admin-nav-guide: rgb(255 255 255 / 0.12);
+
+  --glass-tint: 20 24 31;
+  --shadow-ink: 0 0 0;
+
+  --admin-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24), 0 1px 3px rgb(0 0 0 / 0.16);
+  --admin-shadow-md: 0 4px 12px rgb(0 0 0 / 0.2), 0 18px 42px rgb(0 0 0 / 0.2);
+  --admin-shadow-lg: 0 8px 22px rgb(0 0 0 / 0.24), 0 32px 72px rgb(0 0 0 / 0.3);
+
+  color-scheme: dark;
+}
+
 /* --- Glass surfaces -------------------------------------------------------- */
 
 /* The topbar: the strongest glass in the admin (§6). */
@@ -1819,6 +1862,92 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* Dark Liquid Glass keeps a cool charcoal tint and a restrained white rim. */
+.admin-ui[data-admin-theme='dark'] .admin-glass-bar {
+  background: rgb(20 24 31 / 0.76);
+  border-color: rgb(255 255 255 / 0.11);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.04),
+    0 10px 30px rgb(0 0 0 / 0.24),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+.admin-ui[data-admin-theme='dark'] .admin-glass-rail {
+  background: rgb(17 21 27 / 0.72);
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.035),
+    0 16px 38px rgb(0 0 0 / 0.25),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+.admin-ui[data-admin-theme='dark'] .admin-glass-card {
+  background: rgb(24 29 37 / 0.7);
+  border-color: rgb(255 255 255 / 0.09);
+  box-shadow:
+    var(--admin-shadow-sm),
+    inset 0 1px 0 rgb(255 255 255 / 0.055);
+}
+.admin-ui[data-admin-theme='dark'] .admin-glass-menu {
+  background: rgb(20 24 31 / 0.92);
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow: var(--admin-shadow-lg);
+}
+
+/* The generic Liquid Glass helpers are also used inside admin editors. */
+.admin-ui[data-admin-theme='dark'] .liquid-glass {
+  background: rgb(24 29 37 / 0.7);
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow:
+    0 10px 34px rgb(0 0 0 / 0.24),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+.admin-ui[data-admin-theme='dark'] .liquid-glass-soft {
+  background: rgb(24 29 37 / 0.54);
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+}
+.admin-ui[data-admin-theme='dark'] .liquid-glass-panel {
+  background: linear-gradient(135deg, rgb(31 37 47 / 0.86), rgb(17 21 28 / 0.7));
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow:
+    0 18px 48px rgb(0 0 0 / 0.24),
+    inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+.admin-ui[data-admin-theme='dark'] .liquid-tab-active {
+  background: rgb(32 38 48 / 0.8);
+  border-color: rgb(255 255 255 / 0.11);
+  box-shadow:
+    0 5px 18px rgb(0 0 0 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+/* Compact Apple-style appearance control in the topbar. */
+.admin-ui .admin-theme-toggle {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--admin-radius-control);
+  border: 1px solid rgb(var(--admin-nav-fg) / 0.1);
+  background: rgb(var(--admin-nav-fg) / 0.055);
+  color: rgb(var(--admin-nav-fg) / 0.72);
+  box-shadow: inset 0 1px 0 rgb(var(--admin-nav-fg) / 0.055);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+.admin-ui .admin-theme-toggle:hover {
+  background: rgb(var(--admin-nav-fg) / 0.095);
+  border-color: rgb(var(--admin-nav-fg) / 0.14);
+  color: rgb(var(--admin-nav-fg));
+}
+.admin-ui .admin-theme-toggle:active {
+  transform: scale(0.96);
 }
 
 /* --- Shared primitives, admin look ---------------------------------------- */

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db/prisma';
 import { getCurrentUser, requireUser } from '@/lib/auth/guards';
 import { getWebsiteSettings } from '@/lib/services/settings';
@@ -37,6 +38,8 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  const cookieStore = await cookies();
+  const initialTheme = cookieStore.get('admin-theme')?.value === 'dark' ? 'dark' : 'light';
   const [site, role, account, scope] = await Promise.all([
     getWebsiteSettings(),
     user.role ? prisma.userRole.findUnique({ where: { slug: user.role }, select: { name: true } }) : null,
@@ -68,6 +71,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         logoDarkUrl: site.logoDarkUrl,
       }}
       country={{ id: scope.country.id, code: scope.country.code, name: scope.country.name }}
+      initialTheme={initialTheme}
       countries={scope.countries.map((country) => ({
         id: country.id,
         code: country.code,

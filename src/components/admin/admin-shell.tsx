@@ -7,11 +7,14 @@ import { AdminTopbar } from './topbar';
 import { cn } from '@/lib/utils/cn';
 import type { CountryContext } from '@/lib/country/types';
 
+export type AdminTheme = 'light' | 'dark';
+
 export function AdminShell({
   user,
   branding,
   country,
   countries,
+  initialTheme,
   children,
 }: {
   user: {
@@ -27,10 +30,12 @@ export function AdminShell({
   country: Pick<CountryContext, 'id' | 'code' | 'name'>;
   /** Every market this user may switch to. */
   countries: Array<Pick<CountryContext, 'id' | 'code' | 'name' | 'isDefault'>>;
+  initialTheme: AdminTheme;
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
+  const [theme, setTheme] = React.useState<AdminTheme>(initialTheme);
   // Until the stored preference is read, render the default width so the
   // server and client markup agree and nothing flashes at a wrong size.
   const [ready, setReady] = React.useState(false);
@@ -66,12 +71,34 @@ export function AdminShell({
    */
   React.useEffect(() => {
     document.body.classList.add('admin-ui');
-    return () => document.body.classList.remove('admin-ui');
+    return () => {
+      document.body.classList.remove('admin-ui', 'dark');
+      delete document.body.dataset.adminTheme;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    document.body.dataset.adminTheme = theme;
+    document.body.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  const changeTheme = React.useCallback((next: AdminTheme) => {
+    setTheme(next);
+    try {
+      document.cookie = `admin-theme=${next}; path=/; max-age=31536000; samesite=lax`;
+      window.localStorage.setItem('admin:theme', next);
+    } catch {
+      // Storage/cookies can be unavailable in hardened browsing modes; the
+      // current session still updates immediately.
+    }
   }, []);
 
   return (
     <SessionProvider>
-      <div className="admin-ui min-h-screen bg-admin-workspace">
+      <div
+        className={cn('admin-ui min-h-screen bg-admin-workspace', theme === 'dark' && 'dark')}
+        data-admin-theme={theme}
+      >
         <a href="#admin-main" className="skip-link">
           Skip to content
         </a>
@@ -82,6 +109,7 @@ export function AdminShell({
           siteName={branding.siteName}
           logoUrl={branding.logoUrl}
           logoDarkUrl={branding.logoDarkUrl}
+          theme={theme}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           collapsed={isCollapsed}
@@ -106,6 +134,8 @@ export function AdminShell({
             isSuperAdmin={user.isSuperAdmin}
             country={country}
             countries={countries}
+            theme={theme}
+            onThemeChange={changeTheme}
             onOpenSidebar={() => setSidebarOpen(true)}
           />
           <main
