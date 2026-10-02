@@ -12,6 +12,18 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Glassier admin dashboard** (admin only):
+  - A soft, fixed wash of brand blue, violet and teal sits behind the
+    dashboard, so its glass has colour to frost.
+  - Every dashboard panel is frosted glass. This uses `Card`'s new `glass`
+    prop; other screens' cards stay solid for readability.
+  - KPI cards frost the wash as well.
+  - Tiles and quick actions inside the panels are a lighter glass layer.
+  - The topbar's fade strip turns into a blur on the dashboard, so content
+    scrolling under the bar blurs away instead of showing a grey band.
+  - Dark mode has its own wash, borders and shadows.
+  - With *reduce transparency* switched on, the wash is hidden and the panels
+    go solid.
 - **Admin design system, phase 3: consistency across every module** (admin
   only; the public site is unchanged):
   - **One page width.** List screens now use the full workspace. Form and
