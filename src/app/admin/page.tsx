@@ -128,7 +128,7 @@ export default async function AdminDashboard({
       ) : null}
 
       {/* --- KPIs ------------------------------------------------------- */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {canSeeLeads ? (
           <>
             <StatCard

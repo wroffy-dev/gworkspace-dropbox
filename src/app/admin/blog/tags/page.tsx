@@ -59,7 +59,7 @@ export default async function BlogTags({
   }));
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div>
       <AdminPageHeader
         title="Blog tags"
         description="Tags are created automatically when a post uses a new one. Rename, re-slug or clear out unused ones here."

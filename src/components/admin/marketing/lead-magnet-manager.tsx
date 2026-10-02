@@ -7,6 +7,8 @@ import { saveLeadMagnet, deleteLeadMagnet } from '@/lib/actions/campaigns';
 import { Dialog, ConfirmDialog } from '@/components/ui/dialog';
 import { Field, Input, Select, Textarea, Switch } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AdminPageHeader } from '@/components/admin/page-header';
 import { Table, TableWrap, Th, Td, Tr } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/states';
 import { Badge } from '@/components/ui/badge';
@@ -66,9 +68,16 @@ function blank(): LeadMagnetRow {
 
 export function LeadMagnetManager({
   rows,
+  title,
+  description,
+  summary,
   forms,
   canEdit,
 }: {
+  title: string;
+  description: string;
+  /** KPI cards, between the heading and the list. */
+  summary?: React.ReactNode;
   rows: LeadMagnetRow[];
   forms: Array<{ id: string; name: string }>;
   canEdit: boolean;
@@ -101,87 +110,94 @@ export function LeadMagnetManager({
 
   return (
     <>
-      {canEdit ? (
-        <div className="mb-4">
-          <Button onClick={() => setEditing(blank())}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New lead magnet
-          </Button>
-        </div>
-      ) : null}
+      <AdminPageHeader
+        title={title}
+        description={description}
+        actions={
+          canEdit ? (
+            <Button onClick={() => setEditing(blank())}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New lead magnet
+            </Button>
+          ) : undefined
+        }
+      />
+      {summary}
 
-      {rows.length === 0 ? (
-        <EmptyState
-          icon={<Gift className="h-5 w-5" />}
-          title="No lead magnets yet"
-          description="Offer a guide or checklist in exchange for contact details, then place it with the Lead magnet block."
-          action={canEdit ? <Button onClick={() => setEditing(blank())}>New lead magnet</Button> : undefined}
-        />
-      ) : (
-        <TableWrap>
-          <Table className="min-w-[40rem]">
-            <caption className="sr-only">Lead magnets</caption>
-            <thead>
-              <tr>
-                <Th>Title</Th>
-                <Th>Type</Th>
-                <Th>Slug</Th>
-                <Th align="center">Leads</Th>
-                <Th>Status</Th>
-                <Th align="right">Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <Tr key={row.id}>
-                  <Td>
-                    <span className="font-medium text-content">{row.title}</span>
-                    {row.description ? (
-                      <span className="block truncate text-xs text-muted">{row.description}</span>
-                    ) : null}
-                  </Td>
-                  <Td className="text-sm text-muted">{KIND_LABELS[row.kind] ?? row.kind}</Td>
-                  <Td>
-                    <code className="rounded bg-muted/10 px-1.5 py-0.5 font-mono text-xs text-muted">
-                      {row.slug}
-                    </code>
-                  </Td>
-                  <Td align="center" className="text-sm text-muted">
-                    {row.leadCount}
-                  </Td>
-                  <Td>
-                    <Badge tone={row.isActive ? 'success' : 'neutral'}>
-                      {row.isActive ? 'Active' : 'Off'}
-                    </Badge>
-                  </Td>
-                  <Td align="right">
-                    {canEdit ? (
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditing(row)}
-                          aria-label={`Edit ${row.title}`}
-                          className="rounded p-1.5 text-muted hover:bg-muted/10 hover:text-content"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDelete(row)}
-                          aria-label={`Delete ${row.title}`}
-                          className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : null}
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
-        </TableWrap>
-      )}
+      <Card className="p-4 sm:p-5">
+        {rows.length === 0 ? (
+          <EmptyState
+            icon={<Gift className="h-5 w-5" />}
+            title="No lead magnets yet"
+            description="Offer a guide or checklist in exchange for contact details, then place it with the Lead magnet block."
+            action={canEdit ? <Button onClick={() => setEditing(blank())}>New lead magnet</Button> : undefined}
+          />
+        ) : (
+          <TableWrap>
+            <Table className="min-w-[40rem]">
+              <caption className="sr-only">Lead magnets</caption>
+              <thead>
+                <tr>
+                  <Th>Title</Th>
+                  <Th>Type</Th>
+                  <Th>Slug</Th>
+                  <Th align="center">Leads</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <Tr key={row.id}>
+                    <Td>
+                      <span className="font-medium text-content">{row.title}</span>
+                      {row.description ? (
+                        <span className="block truncate text-xs text-muted">{row.description}</span>
+                      ) : null}
+                    </Td>
+                    <Td className="text-sm text-muted">{KIND_LABELS[row.kind] ?? row.kind}</Td>
+                    <Td>
+                      <code className="rounded bg-muted/10 px-1.5 py-0.5 font-mono text-xs text-muted">
+                        {row.slug}
+                      </code>
+                    </Td>
+                    <Td align="center" className="text-sm text-muted">
+                      {row.leadCount}
+                    </Td>
+                    <Td>
+                      <Badge tone={row.isActive ? 'success' : 'neutral'}>
+                        {row.isActive ? 'Active' : 'Off'}
+                      </Badge>
+                    </Td>
+                    <Td align="right">
+                      {canEdit ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditing(row)}
+                            aria-label={`Edit ${row.title}`}
+                            className="rounded p-1.5 text-muted hover:bg-muted/10 hover:text-content"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDelete(row)}
+                            aria-label={`Delete ${row.title}`}
+                            className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : null}
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Card>
 
       <Dialog
         open={Boolean(editing)}

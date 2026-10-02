@@ -162,7 +162,7 @@ export default async function SeoAudit({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="max-w-5xl">
       <AdminPageHeader
         title={doc.name}
         description={`${PAGE_KIND_LABELS[doc.kind]} · ${doc.country.name} · ${doc.path}`}

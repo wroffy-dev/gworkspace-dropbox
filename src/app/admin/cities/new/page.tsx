@@ -25,7 +25,7 @@ export default async function NewCity({ searchParams }: { searchParams: Promise<
         backHref="/admin/cities"
         backLabel="All cities"
       />
-      <div className="mx-auto max-w-4xl">
+      <div className="max-w-4xl">
         <CityForm
           initial={{ ...BLANK_CITY, countryId: chosen?.id ?? markets[0]?.id ?? '' }}
           markets={markets}

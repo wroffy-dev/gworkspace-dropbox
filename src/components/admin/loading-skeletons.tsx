@@ -48,7 +48,7 @@ export function DashboardSkeleton() {
     <div aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading…</span>
       <PageHeaderSkeleton />
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
           <Skeleton key={index} className="h-24" />
         ))}

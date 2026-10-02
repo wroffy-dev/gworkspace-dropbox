@@ -7,6 +7,8 @@ import { savePopup, togglePopup, deletePopup } from '@/lib/actions/campaigns';
 import { Dialog, ConfirmDialog } from '@/components/ui/dialog';
 import { Field, Input, Select, Textarea, Switch } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AdminPageHeader } from '@/components/admin/page-header';
 import { Table, TableWrap, Th, Td, Tr } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/states';
 import { Badge } from '@/components/ui/badge';
@@ -124,11 +126,18 @@ function blank(): PopupRow {
 
 export function PopupManager({
   rows,
+  title,
+  description,
+  summary,
   forms,
   leadMagnets,
   countries = [],
   canEdit,
 }: {
+  title: string;
+  description: string;
+  /** KPI cards, between the heading and the list. */
+  summary?: React.ReactNode;
   rows: PopupRow[];
   /** Markets a popup can be targeted at. Empty on a single-market install. */
   countries?: Array<{ id: string; name: string }>;
@@ -176,105 +185,112 @@ export function PopupManager({
 
   return (
     <>
-      {canEdit ? (
-        <div className="mb-4">
-          <Button onClick={() => setEditing(blank())}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New popup
-          </Button>
-        </div>
-      ) : null}
+      <AdminPageHeader
+        title={title}
+        description={description}
+        actions={
+          canEdit ? (
+            <Button onClick={() => setEditing(blank())}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New popup
+            </Button>
+          ) : undefined
+        }
+      />
+      {summary}
 
-      {rows.length === 0 ? (
-        <EmptyState
-          icon={<Megaphone className="h-5 w-5" />}
-          title="No popups yet"
-          description="Use a popup for a time-limited offer or to capture newsletter sign-ups."
-          action={canEdit ? <Button onClick={() => setEditing(blank())}>New popup</Button> : undefined}
-        />
-      ) : (
-        <TableWrap>
-          <Table className="min-w-[44rem]">
-            <caption className="sr-only">Popups</caption>
-            <thead>
-              <tr>
-                <Th>Name</Th>
-                <Th>Type</Th>
-                <Th>Trigger</Th>
-                <Th>Targeting</Th>
-                <Th>Schedule</Th>
-                <Th>Status</Th>
-                <Th align="right">Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <Tr key={row.id}>
-                  <Td>
-                    <span className="font-medium text-content">{row.name}</span>
-                    {row.heading ? <span className="block text-xs text-muted">{row.heading}</span> : null}
-                  </Td>
-                  <Td className="text-sm text-muted">{TYPE_LABELS[row.type] ?? row.type}</Td>
-                  <Td className="text-sm text-muted">
-                    {TRIGGER_LABELS[row.trigger] ?? row.trigger}
-                    {row.trigger === 'DELAY' ? ` (${row.delaySeconds}s)` : ''}
-                    {row.trigger === 'SCROLL' ? ` (${row.scrollPercent}%)` : ''}
-                  </Td>
-                  <Td className="text-sm text-muted">
-                    {row.trigger === 'CLICK'
-                      ? 'Wherever it is linked'
-                      : row.urlPatterns.length > 0
-                        ? `${row.urlPatterns.length} page rule(s)`
-                        : 'Every page'}
-                    {row.trigger !== 'CLICK' && row.device !== 'ALL' ? ` · ${row.device.toLowerCase()}` : ''}
-                  </Td>
-                  <Td className="whitespace-nowrap text-sm text-muted">
-                    {row.startsAt || row.endsAt
-                      ? `${row.startsAt ? formatDate(row.startsAt) : '—'} → ${row.endsAt ? formatDate(row.endsAt) : '—'}`
-                      : 'Always'}
-                  </Td>
-                  <Td>
-                    <Badge tone={row.isActive ? 'success' : 'neutral'}>
-                      {row.isActive ? 'Active' : 'Off'}
-                    </Badge>
-                  </Td>
-                  <Td align="right">
-                    {canEdit ? (
-                      <div className="flex items-center justify-end gap-1">
-                        <PopupLinkCopy popupId={row.id} compact />
-                        <button
-                          type="button"
-                          onClick={() => run(() => togglePopup(row.id))}
-                          disabled={pending}
-                          className="rounded px-2 py-1 text-xs text-muted transition-colors hover:bg-muted/10 hover:text-content"
-                        >
-                          {row.isActive ? 'Disable' : 'Enable'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditing(row)}
-                          aria-label={`Edit ${row.name}`}
-                          className="rounded p-1.5 text-muted hover:bg-muted/10 hover:text-content"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDelete(row)}
-                          aria-label={`Delete ${row.name}`}
-                          className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : null}
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
-        </TableWrap>
-      )}
+      <Card className="p-4 sm:p-5">
+        {rows.length === 0 ? (
+          <EmptyState
+            icon={<Megaphone className="h-5 w-5" />}
+            title="No popups yet"
+            description="Use a popup for a time-limited offer or to capture newsletter sign-ups."
+            action={canEdit ? <Button onClick={() => setEditing(blank())}>New popup</Button> : undefined}
+          />
+        ) : (
+          <TableWrap>
+            <Table className="min-w-[44rem]">
+              <caption className="sr-only">Popups</caption>
+              <thead>
+                <tr>
+                  <Th>Name</Th>
+                  <Th>Type</Th>
+                  <Th>Trigger</Th>
+                  <Th>Targeting</Th>
+                  <Th>Schedule</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <Tr key={row.id}>
+                    <Td>
+                      <span className="font-medium text-content">{row.name}</span>
+                      {row.heading ? <span className="block text-xs text-muted">{row.heading}</span> : null}
+                    </Td>
+                    <Td className="text-sm text-muted">{TYPE_LABELS[row.type] ?? row.type}</Td>
+                    <Td className="text-sm text-muted">
+                      {TRIGGER_LABELS[row.trigger] ?? row.trigger}
+                      {row.trigger === 'DELAY' ? ` (${row.delaySeconds}s)` : ''}
+                      {row.trigger === 'SCROLL' ? ` (${row.scrollPercent}%)` : ''}
+                    </Td>
+                    <Td className="text-sm text-muted">
+                      {row.trigger === 'CLICK'
+                        ? 'Wherever it is linked'
+                        : row.urlPatterns.length > 0
+                          ? `${row.urlPatterns.length} page rule(s)`
+                          : 'Every page'}
+                      {row.trigger !== 'CLICK' && row.device !== 'ALL' ? ` · ${row.device.toLowerCase()}` : ''}
+                    </Td>
+                    <Td className="whitespace-nowrap text-sm text-muted">
+                      {row.startsAt || row.endsAt
+                        ? `${row.startsAt ? formatDate(row.startsAt) : '—'} → ${row.endsAt ? formatDate(row.endsAt) : '—'}`
+                        : 'Always'}
+                    </Td>
+                    <Td>
+                      <Badge tone={row.isActive ? 'success' : 'neutral'}>
+                        {row.isActive ? 'Active' : 'Off'}
+                      </Badge>
+                    </Td>
+                    <Td align="right">
+                      {canEdit ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <PopupLinkCopy popupId={row.id} compact />
+                          <button
+                            type="button"
+                            onClick={() => run(() => togglePopup(row.id))}
+                            disabled={pending}
+                            className="rounded px-2 py-1 text-xs text-muted transition-colors hover:bg-muted/10 hover:text-content"
+                          >
+                            {row.isActive ? 'Disable' : 'Enable'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditing(row)}
+                            aria-label={`Edit ${row.name}`}
+                            className="rounded p-1.5 text-muted hover:bg-muted/10 hover:text-content"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDelete(row)}
+                            aria-label={`Delete ${row.name}`}
+                            className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : null}
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Card>
 
       <Dialog
         open={Boolean(editing)}

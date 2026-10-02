@@ -24,6 +24,7 @@ export function StatCard({
   trend,
   trendLabel = 'vs previous period',
   sparkline,
+  invertTrend = false,
   className,
 }: {
   label: string;
@@ -38,8 +39,12 @@ export function StatCard({
   trendLabel?: string;
   /** Recent values, oldest first, drawn as a small line. */
   sparkline?: number[];
+  /** For a figure where going up is bad news (lost leads): a rise reads red. */
+  invertTrend?: boolean;
   className?: string;
 }) {
+  const good = trend != null && (invertTrend ? trend < 0 : trend > 0);
+  const bad = trend != null && (invertTrend ? trend > 0 : trend < 0);
   const valueTone = {
     default: 'text-content',
     brand: 'text-brand',
@@ -59,7 +64,9 @@ export function StatCard({
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+        <p className="min-w-0 break-words text-xs font-medium uppercase tracking-wide text-muted">
+          {label}
+        </p>
         {icon ? (
           <span
             className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', iconTone)}
@@ -86,8 +93,8 @@ export function StatCard({
           <span
             className={cn(
               'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium',
-              trend > 0 && 'bg-emerald-50 text-emerald-700',
-              trend < 0 && 'bg-red-50 text-red-700',
+              good && 'bg-emerald-50 text-emerald-700',
+              bad && 'bg-red-50 text-red-700',
               trend === 0 && 'bg-muted/10 text-muted',
             )}
           >

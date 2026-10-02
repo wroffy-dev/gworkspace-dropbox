@@ -30,7 +30,7 @@ export default async function SlugManagerPage({
     : 'urls';
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div>
       <AdminPageHeader
         title="Slug & URL Manager"
         description="Every public address, the patterns they follow, redirects, conflicts, history and URL health."

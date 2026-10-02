@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Plus, TrendingUp, TrendingDown, Minus, Users, AlertCircle } from 'lucide-react';
+import { Plus, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { StatCard, type StatTone } from '@/components/admin/stat-card';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DateRangePicker } from '@/components/admin/date-range-picker';
@@ -25,7 +26,6 @@ import { startOfDay, endOfDay } from '@/lib/admin/date-range';
 import { formatRelative } from '@/lib/utils/format';
 import { resolveListCountry, ALL_COUNTRIES } from '@/lib/admin/country-filter';
 import { CountryScopePicker } from '@/components/admin/country-scope-picker';
-import { cn } from '@/lib/utils/cn';
 
 export const metadata: Metadata = { title: 'CRM dashboard' };
 export const dynamic = 'force-dynamic';
@@ -117,7 +117,7 @@ export default async function CrmDashboard({
         }
       />
 
-      <section aria-label="Key figures" className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-3">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.key} kpi={kpi} />
         ))}
@@ -313,39 +313,31 @@ export default async function CrmDashboard({
   );
 }
 
-function KpiCard({ kpi }: { kpi: Kpi }) {
-  const display = kpi.isRate ? `${kpi.value.toFixed(1)}%` : kpi.value.toLocaleString();
-  const up = kpi.change !== null && kpi.change > 0;
-  const down = kpi.change !== null && kpi.change < 0;
-  // For "Lost", moving up is not good news — colour follows meaning, not sign.
-  const goodWhenUp = kpi.key !== 'lost';
-  const Icon = kpi.change === null || kpi.change === 0 ? Minus : up ? TrendingUp : TrendingDown;
+const KPI_LOOK: Record<string, { icon: string; tone?: StatTone }> = {
+  total: { icon: 'inbox' },
+  new: { icon: 'sparkles', tone: 'brand' },
+  contacted: { icon: 'phone' },
+  qualified: { icon: 'check' },
+  won: { icon: 'trophy', tone: 'success' },
+  lost: { icon: 'x-circle', tone: 'danger' },
+  customers: { icon: 'building' },
+  submissions: { icon: 'clipboard' },
+  conversion: { icon: 'percent' },
+};
 
+function KpiCard({ kpi }: { kpi: Kpi }) {
+  const look = KPI_LOOK[kpi.key] ?? { icon: 'chart' };
   return (
-    <div className="rounded-xl border border-hairline bg-surface p-4">
-      <p className="text-sm text-muted">{kpi.label}</p>
-      <p className="mt-1 text-2xl font-semibold text-content">{display}</p>
-      <p
-        className={cn(
-          'mt-1.5 flex items-center gap-1 text-xs',
-          kpi.change === null || kpi.change === 0
-            ? 'text-muted'
-            : (up && goodWhenUp) || (down && !goodWhenUp)
-              ? 'text-emerald-700'
-              : 'text-amber-700',
-        )}
-      >
-        <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        {kpi.change === null ? (
-          <span>No activity in the previous period</span>
-        ) : (
-          <span>
-            {kpi.change > 0 ? '↑' : kpi.change < 0 ? '↓' : ''} {Math.abs(kpi.change).toFixed(1)}% vs
-            previous period
-          </span>
-        )}
-      </p>
-    </div>
+    <StatCard
+      label={kpi.label}
+      value={kpi.isRate ? `${kpi.value.toFixed(1)}%` : kpi.value}
+      icon={look.icon}
+      tone={look.tone}
+      trend={kpi.change}
+      // For "Lost", moving up is not good news — colour follows meaning, not sign.
+      invertTrend={kpi.key === 'lost'}
+      hint={kpi.change === null ? 'No activity in the previous period' : undefined}
+    />
   );
 }
 

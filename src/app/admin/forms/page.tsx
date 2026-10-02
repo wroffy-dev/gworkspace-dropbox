@@ -3,6 +3,7 @@ import { Plus, Inbox } from 'lucide-react';
 import { prisma } from '@/lib/db/prisma';
 import { requirePermission, userCan } from '@/lib/auth/guards';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { StatCard } from '@/components/admin/stat-card';
 import { FormsTable, type FormRow } from '@/components/admin/forms/forms-table';
 import { Card } from '@/components/ui/card';
 import { ButtonLink } from '@/components/ui/button';
@@ -48,6 +49,10 @@ export default async function FormsAdmin() {
     updatedAt: row.updatedAt.toISOString(),
   }));
 
+  const activeForms = tableRows.filter((row) => row.isActive).length;
+  const submissionTotal = tableRows.reduce((sum, row) => sum + row.submissionCount, 0);
+  const leadTotal = tableRows.reduce((sum, row) => sum + row.leadCount, 0);
+
   return (
     <>
       <AdminPageHeader
@@ -69,6 +74,22 @@ export default async function FormsAdmin() {
           ) : null
         }
       />
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard label="Forms" value={tableRows.length} icon="clipboard" />
+        <StatCard
+          label="Active"
+          value={activeForms}
+          icon="check"
+          tone={activeForms > 0 ? 'success' : 'default'}
+        />
+        <StatCard
+          label="Submissions"
+          value={submissionTotal}
+          icon="send"
+          href="/admin/forms/submissions"
+        />
+        <StatCard label="Leads created" value={leadTotal} icon="inbox" tone="brand" href="/admin/leads" />
+      </div>
       <Card>
         <FormsTable
           rows={tableRows}

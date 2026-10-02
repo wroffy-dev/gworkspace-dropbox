@@ -269,7 +269,7 @@ export default async function ProductsAdmin({
         }
       />
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard label="Total products" value={catalogueTotal} href="/admin/products" icon="package" />
         <StatCard
           label="Published"
