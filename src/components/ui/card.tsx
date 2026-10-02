@@ -1,13 +1,24 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  glass = false,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  /**
+   * Frosted glass instead of solid, for overview screens (the dashboard) that
+   * sit over the ambient backdrop. Off by default: cards that hold tables and
+   * forms stay solid, where readability wins.
+   */
+  glass?: boolean;
+}) {
   return (
     <div
       className={cn(
-        // Solid on purpose: cards hold tables and forms, where readability wins.
         'rounded-[var(--admin-radius-card,0.75rem)] border border-hairline bg-surface',
         'shadow-[var(--admin-shadow-sm,0_1px_2px_rgb(0_0_0/0.05))]',
+        glass && 'admin-glass-panel',
         className,
       )}
       {...props}
