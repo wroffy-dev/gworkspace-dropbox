@@ -22,6 +22,8 @@ export type SidebarProps = {
   logoUrl: string | null;
   /** Preferred on the dark rail; falls back to the light logo. */
   logoDarkUrl?: string | null;
+  /** Current admin appearance, used for the correct logo on glass. */
+  theme: 'light' | 'dark';
   /** Mobile drawer state. */
   open: boolean;
   onClose: () => void;
@@ -44,6 +46,7 @@ export function AdminSidebar({
   siteName,
   logoUrl,
   logoDarkUrl,
+  theme,
   open,
   onClose,
   collapsed,
@@ -60,9 +63,9 @@ export function AdminSidebar({
 
   const modules = React.useMemo(() => visibleModules(can, isSuperAdmin), [can, isSuperAdmin]);
 
-  // The rail is a light glass surface, so the ordinary logo from Website
-  // settings is the right one; the dark-surface logo is the fallback.
-  const brandLogo = logoUrl || logoDarkUrl;
+  // Use the logo intended for the current glass surface, with a safe fallback
+  // when only one logo has been configured.
+  const brandLogo = theme === 'dark' ? logoDarkUrl || logoUrl : logoUrl || logoDarkUrl;
 
   // The same answer the breadcrumbs give, detail routes (/admin/pages/abc)
   // included, so the open module and the trail can never disagree.

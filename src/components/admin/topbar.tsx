@@ -12,6 +12,8 @@ import {
   User,
   UserCircle,
   ShieldCheck,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { initials } from '@/lib/utils/format';
 import type { PermissionKey } from '@/lib/auth/permissions';
@@ -52,6 +54,8 @@ export function AdminTopbar({
   isSuperAdmin,
   country,
   countries,
+  theme,
+  onThemeChange,
   onOpenSidebar,
 }: {
   user: { name: string; email: string; roleName: string; image?: string | null };
@@ -61,6 +65,8 @@ export function AdminTopbar({
   country: Pick<CountryContext, 'id' | 'code' | 'name'>;
   /** Every market this user may switch to. */
   countries: Array<Pick<CountryContext, 'id' | 'code' | 'name' | 'isDefault'>>;
+  theme: 'light' | 'dark';
+  onThemeChange: (theme: 'light' | 'dark') => void;
   onOpenSidebar: () => void;
 }) {
   const can = (permission: PermissionKey) => isSuperAdmin || permissions.includes(permission);
@@ -95,6 +101,22 @@ export function AdminTopbar({
         </div>
 
         <AdminCountrySwitcher current={country} countries={countries} />
+
+        <button
+          type="button"
+          onClick={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          aria-pressed={theme === 'dark'}
+          className="admin-theme-toggle admin-focus admin-focus-header"
+        >
+          <span className="sr-only">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Moon className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
 
         {createOptions.length > 0 ? (
           <Menu
