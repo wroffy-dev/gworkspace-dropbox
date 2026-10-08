@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { authorize } from '@/lib/auth/guards';
+import { blockPermissionMessage } from '@/lib/cms/block-permissions';
 import { recordAudit } from '@/lib/services/audit';
 import { pageInputSchema, sectionOrderSchema } from '@/lib/validation/page';
 import { blockDefaults, getBlock } from '@/lib/cms/blocks';
@@ -563,6 +564,8 @@ export async function addSection(
     const user = await authorize('pages.edit');
     const definition = getBlock(blockType);
     if (!definition) return failure('Unknown block type.');
+    const blocked = blockPermissionMessage(user, blockType);
+    if (blocked) return failure(blocked);
 
     const page = await prisma.page.findUnique({
       where: { id: pageId },
@@ -620,6 +623,12 @@ export async function updateSection(
     const definition = getBlock(section.blockType);
     const data: Record<string, unknown> = {};
 
+    if (payload.content !== undefined) {
+      // Moving, hiding or restyling is open to every editor; changing what a
+      // custom code section runs is not.
+      const blocked = blockPermissionMessage(user, section.blockType);
+      if (blocked) return failure(blocked);
+    }
     if (payload.content !== undefined && definition) {
       // Validate against the block's own schema so stored content always parses.
       data.content = definition.schema.parse(payload.content);
@@ -654,6 +663,19 @@ export async function updateSection(
     if (payload.isVisible !== undefined) data.isVisible = payload.isVisible;
 
     await prisma.pageSection.update({ where: { id: sectionId }, data });
+    // Custom code is audited with its full before and after, like the tracking
+    // scripts: it is code that runs for every visitor.
+    if (section.blockType === 'customHtml' && data.content !== undefined) {
+      await recordAudit({
+        actor: user,
+        action: 'section.code.updated',
+        entity: 'PageSection',
+        entityId: sectionId,
+        summary: 'Changed the code of a custom code section',
+        before: section.content,
+        after: data.content,
+      });
+    }
     await prisma.page.update({ where: { id: section.page.id }, data: { updatedById: user.id } });
 
     revalidatePath(`/admin/pages/${section.page.id}`);
@@ -666,12 +688,14 @@ export async function updateSection(
 
 export async function duplicateSection(sectionId: string): Promise<ActionResult<{ id: string }>> {
   try {
-    await authorize('pages.edit');
+    const user = await authorize('pages.edit');
     const source = await prisma.pageSection.findUnique({
       where: { id: sectionId },
       include: { page: { select: { id: true, slug: true, countryId: true } } },
     });
     if (!source) return failure('That section no longer exists.');
+    const blocked = blockPermissionMessage(user, source.blockType);
+    if (blocked) return failure(blocked);
 
     // The copy keeps every design value except the anchor: two elements cannot
     // share one DOM id, and silently duplicating it would break #links.

@@ -6,6 +6,7 @@ import { addressesOf, revalidateAddresses } from '@/lib/urls/revalidate';
 import { ProductSurface } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import { authorize } from '@/lib/auth/guards';
+import { blockPermissionMessage } from '@/lib/cms/block-permissions';
 import { recordAudit } from '@/lib/services/audit';
 import { blockDefaults, getBlock, blockAllowedOnSurface } from '@/lib/cms/blocks';
 import { parseSectionDesign, DEFAULT_SECTION_DESIGN } from '@/lib/cms/design';
@@ -107,6 +108,8 @@ export async function addProductSection(input: {
     if (!blockAllowedOnSurface(input.blockType, surfaceKey(surface))) {
       return failure('That block cannot be added here.');
     }
+    const blocked = blockPermissionMessage(user, input.blockType);
+    if (blocked) return failure(blocked);
 
     // Adding to a surface that has never been opened materialises it first, so
     // the new section joins the arrangement rather than replacing it.
@@ -166,12 +169,17 @@ export async function updateProductSection(
   payload: { content?: unknown; settings?: unknown; name?: string | null; isVisible?: boolean },
 ): Promise<ActionResult> {
   try {
-    await authorize('products.edit');
+    const user = await authorize('products.edit');
     const section = await loadSection(sectionId);
     if (!section || section.product.deletedAt) return failure('That section no longer exists.');
 
     const definition = getBlock(section.blockType);
     const data: Record<string, unknown> = {};
+
+    if (payload.content !== undefined) {
+      const blocked = blockPermissionMessage(user, section.blockType);
+      if (blocked) return failure(blocked);
+    }
 
     if (payload.content !== undefined && definition) {
       data.content = definition.schema.parse(payload.content);
@@ -204,6 +212,17 @@ export async function updateProductSection(
     if (payload.isVisible !== undefined) data.isVisible = payload.isVisible;
 
     await prisma.productSection.update({ where: { id: sectionId }, data });
+    if (section.blockType === 'customHtml' && data.content !== undefined) {
+      await recordAudit({
+        actor: user,
+        action: 'section.code.updated',
+        entity: 'ProductSection',
+        entityId: sectionId,
+        summary: 'Changed the code of a custom code section',
+        before: section.content,
+        after: data.content,
+      });
+    }
     await revalidateProduct(section.productId, section.product.slug);
     return success(undefined, 'Section saved.');
   } catch (error) {
@@ -215,9 +234,11 @@ export async function duplicateProductSection(
   sectionId: string,
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    await authorize('products.edit');
+    const user = await authorize('products.edit');
     const source = await loadSection(sectionId);
     if (!source || source.product.deletedAt) return failure('That section no longer exists.');
+    const blocked = blockPermissionMessage(user, source.blockType);
+    if (blocked) return failure(blocked);
 
     const definition = getBlock(source.blockType);
     if (definition?.singleton) {

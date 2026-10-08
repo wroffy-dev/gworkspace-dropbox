@@ -2838,3 +2838,15 @@
   .cms-ct__fade,
   .cms-ct__tip-text { transition: none; }
 }
+
+/* --- Custom code (the `customHtml` block) ------------------------------- */
+.cms-custom-code { min-width: 0; }
+.cms-custom-code__frame { display: block; width: 100%; border: 0; background: transparent; }
+.cms-custom-code__empty {
+  padding: 1.5rem;
+  border: 1px dashed rgb(var(--brand-border));
+  border-radius: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgb(var(--brand-muted));
+}

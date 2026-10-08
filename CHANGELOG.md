@@ -12,6 +12,26 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Custom code section** (`customHtml`): your own HTML, CSS and JavaScript as
+  a page section, in the page builder's Content group.
+  - **Editor:** HTML, CSS and JavaScript panes with a live preview at desktop
+    and mobile widths. The preview always runs sandboxed, so code never runs
+    inside the admin.
+  - **Isolated (default):** the code runs in a sandboxed iframe with no
+    access to the site's cookies, storage, page or admin session. It grows to
+    its content's height automatically.
+  - **Inline (opt-in):** the code runs in the page itself, with a warning in
+    the editor. The markup is rendered on the server, and scripts run once
+    after mount, in order.
+  - **Permission:** needs the new **Add and edit custom code sections**
+    permission (`pages.customCode`) to add, edit or duplicate. Only Super Admin
+    has it by default. The check is enforced on the server for pages and
+    product pages.
+  - **Audit:** every code change is recorded in the audit log with its
+    before and after.
+  - **Markets:** code is never rewritten into a market's URL space.
+  - See `docs/CUSTOM-CODE.md`.
+
 - **Comparison table section** (`comparisonTable`): a fully manual comparison
   table in the page builder's Content group. It is independent of the Product
   module and does not change the product comparison table.

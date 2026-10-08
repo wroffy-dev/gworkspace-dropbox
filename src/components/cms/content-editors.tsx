@@ -5,6 +5,7 @@ import type { FieldDescriptor } from '@/lib/cms/fields';
 import type { FieldValues } from './field-renderer';
 import { ImageWidgetEditor } from './image-widget-editor';
 import { ComparisonTableEditor } from './comparison-table-editor';
+import { CustomHtmlEditor } from './custom-html-editor';
 
 /** What a block's own Content tab receives — the same as the generic field list. */
 export type ContentEditorProps = {
@@ -36,4 +37,5 @@ export type ContentEditorProps = {
 export const CONTENT_EDITORS: Partial<Record<string, React.ComponentType<ContentEditorProps>>> = {
   imageWidget: ImageWidgetEditor,
   comparisonTable: ComparisonTableEditor,
+  customHtml: CustomHtmlEditor,
 };
