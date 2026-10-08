@@ -246,6 +246,12 @@ export function SectionEditorPanel({
                   content: writeFieldPaths(content, patch) as FieldValues,
                 })
               }
+              onChangeAs={(control, patch) =>
+                edit(`content:${control}`, {
+                  ...draft,
+                  content: writeFieldPaths(content, patch) as FieldValues,
+                })
+              }
             />
           </TabPanel>
 

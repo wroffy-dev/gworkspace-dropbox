@@ -31,6 +31,26 @@ export function sanitizeHtml(dirty: string | null | undefined): string {
   });
 }
 
+/**
+ * Inline rich text: emphasis, links and line breaks, nothing structural.
+ *
+ * For short formatted values that sit inside something else — a comparison
+ * table cell — where a heading, list, image or table would break the layout
+ * around it. Links keep only `href` and `title`: no `target`, so a cell can
+ * never open a tab that can reach back into this one.
+ */
+const INLINE_TAGS = ['strong', 'b', 'em', 'i', 'u', 's', 'br', 'a', 'code', 'small', 'sup', 'sub', 'span'];
+
+export function sanitizeInlineHtml(dirty: string | null | undefined): string {
+  if (!dirty) return '';
+  return DOMPurify.sanitize(dirty, {
+    ALLOWED_TAGS: INLINE_TAGS,
+    ALLOWED_ATTR: ['href', 'title'],
+    ALLOW_DATA_ATTR: false,
+    ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|tel:|\/|#)/i,
+  }).trim();
+}
+
 /** Plain-text sanitiser: strips every tag. For headings, labels, alt text. */
 export function sanitizeText(dirty: string | null | undefined): string {
   if (!dirty) return '';

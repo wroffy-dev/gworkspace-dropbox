@@ -37,6 +37,7 @@ import {
   PhoneCall,
   Send,
   Sparkles,
+  Table2,
 } from 'lucide-react';
 
 const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -76,6 +77,7 @@ const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   phone: PhoneCall,
   send: Send,
   sparkles: Sparkles,
+  table: Table2,
 };
 
 export function NavIcon({ name, className }: { name: string; className?: string }) {
