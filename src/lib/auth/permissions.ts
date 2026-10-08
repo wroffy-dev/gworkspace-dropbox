@@ -12,6 +12,16 @@ export const PERMISSIONS = {
   'pages.edit': { group: 'pages', label: 'Edit pages' },
   'pages.delete': { group: 'pages', label: 'Delete pages' },
   'pages.publish': { group: 'pages', label: 'Publish pages' },
+  /*
+   * Custom code sections run the HTML, CSS and JavaScript they are given on
+   * the public site. Held apart from pages.edit, like the restore and MFA
+   * permissions below: no role gets it by default except Super Admin, who
+   * hands it out on purpose.
+   */
+  'pages.customCode': {
+    group: 'pages',
+    label: 'Add and edit custom code sections (HTML, CSS and JavaScript)',
+  },
 
   'products.view': { group: 'products', label: 'View products' },
   'products.create': { group: 'products', label: 'Create products' },
@@ -130,7 +140,13 @@ export const SYSTEM_ROLES: Array<{
     permissions: ALL_PERMISSIONS.filter(
       (p) =>
         !(
-          ['staff.manage', 'backup.restore', 'backup.delete', 'user.mfa.reset'] as string[]
+          [
+            'staff.manage',
+            'backup.restore',
+            'backup.delete',
+            'user.mfa.reset',
+            'pages.customCode',
+          ] as string[]
         ).includes(p),
     ),
   },

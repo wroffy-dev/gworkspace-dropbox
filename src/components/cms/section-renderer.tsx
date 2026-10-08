@@ -32,6 +32,7 @@ import type {
   TextListImageContent,
   StatisticsContent,
   ComparisonTableContent,
+  CustomHtmlContent,
 } from '@/lib/cms/blocks';
 import type {
   LogoSliderContent,
@@ -90,6 +91,7 @@ import {
 } from './blocks/content-blocks';
 import { ProductCardsBlock, ProductTableBlock, ProductGridBlock } from './blocks/product-blocks';
 import { ComparisonTableBlock } from './blocks/comparison-table-block';
+import { CustomHtmlBlock } from './blocks/custom-html-block';
 import { FaqBlock, TestimonialsBlock } from './blocks/social-blocks';
 import { CtaBlock, FormBlock, LeadMagnetBlock } from './blocks/conversion-blocks';
 import {
@@ -177,7 +179,10 @@ async function BlockBody({ section, ctx }: { section: RenderableSection; ctx: Bl
    * function and the payload is not walked at all, which is why the original
    * single-country rendering is bit-for-bit unchanged.
    */
-  const content = localiseContent(section.content, ctx.country);
+  // Code is not prose: a stylesheet starting "/* …" is not a site path, and
+  // rewriting it into a market's URL space would break it.
+  const content =
+    blockType === 'customHtml' ? section.content : localiseContent(section.content, ctx.country);
   const parse = <T,>() => parseBlockContent<T>(blockType, content);
 
   switch (blockType) {
@@ -197,6 +202,8 @@ async function BlockBody({ section, ctx }: { section: RenderableSection; ctx: Bl
       return <ProductGridBlock content={parse<ProductGridContent>()} ctx={ctx} />;
     case 'comparisonTable':
       return <ComparisonTableBlock content={parse<ComparisonTableContent>()} ctx={ctx} />;
+    case 'customHtml':
+      return <CustomHtmlBlock content={parse<CustomHtmlContent>()} ctx={ctx} />;
     case 'faq':
       return <FaqBlock content={parse<FaqContent>()} ctx={ctx} />;
     case 'testimonials':

@@ -20,6 +20,7 @@ import { PRODUCT_BLOCKS } from './product-blocks';
 import { SLIDER_BLOCKS } from './slider-blocks';
 import { productSourceFields } from './product-source';
 import { comparisonTableSchema, type ComparisonTableContent } from './comparison-table';
+import { customHtmlSchema, type CustomHtmlContent } from './custom-html';
 
 /**
  * Block registry.
@@ -1249,6 +1250,68 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
         width: 'half',
         group: 'Style',
         help: 'Skipped for visitors who ask for reduced motion.',
+      },
+    ],
+  },
+
+  /*
+   * Hand-written HTML, CSS and JavaScript. Needs the `pages.customCode`
+   * permission to add, edit or copy (see `block-permissions.ts`), and runs in
+   * a sandboxed frame unless a section is switched to inline. The code itself
+   * is edited by the block's own Content editor; these fields are how it runs.
+   */
+  customHtml: {
+    type: 'customHtml',
+    label: 'Custom code',
+    description: 'Your own HTML, CSS and JavaScript: embeds, widgets, anything. Needs the Custom code permission.',
+    group: 'Content',
+    icon: 'code',
+    schema: customHtmlSchema,
+    fields: [
+      {
+        kind: 'select',
+        name: 'mode',
+        label: 'Runs',
+        width: 'half',
+        options: [
+          { label: 'Isolated from the site (recommended)', value: 'isolated' },
+          { label: 'Inline, in the page itself', value: 'inline' },
+        ],
+      },
+      {
+        kind: 'text',
+        name: 'title',
+        label: 'Accessible name',
+        width: 'half',
+        help: 'What a screen reader announces for the embedded content.',
+        showWhen: { field: 'mode', equals: ['isolated'] },
+      },
+      {
+        kind: 'select',
+        name: 'height',
+        label: 'Height',
+        width: 'half',
+        options: [
+          { label: 'Grow with the content', value: 'auto' },
+          { label: 'Fixed', value: 'fixed' },
+        ],
+        showWhen: { field: 'mode', equals: ['isolated'] },
+      },
+      {
+        kind: 'length',
+        name: 'fixedHeight',
+        label: 'Fixed height',
+        width: 'half',
+        placeholder: '480px',
+        showWhen: { field: 'height', equals: ['fixed'] },
+      },
+      {
+        kind: 'boolean',
+        name: 'lazy',
+        label: 'Load when scrolled near',
+        width: 'half',
+        help: 'Faster pages. Turn off for code that must start at once.',
+        showWhen: { field: 'mode', equals: ['isolated'] },
       },
     ],
   },
@@ -2529,3 +2592,4 @@ export type TextListImageContent = z.infer<typeof textListImageSchema>;
 export type StatisticsContent = z.infer<typeof statisticsSchema>;
 export type ProductGridContent = z.infer<typeof productGridSchema>;
 export type { ComparisonTableContent };
+export type { CustomHtmlContent };
