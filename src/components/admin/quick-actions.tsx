@@ -69,7 +69,7 @@ export function QuickActions({ can }: { can: (permission: PermissionKey) => bool
           href={action.href}
           {...(action.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           className={cn(
-            'flex items-center gap-2.5 rounded-lg border border-hairline bg-surface px-3 py-2.5',
+            'admin-glass-chip flex items-center gap-2.5 rounded-lg border border-hairline bg-surface px-3 py-2.5',
             'text-sm font-medium text-content transition-colors',
             'hover:border-brand/40 hover:bg-brand/[0.03] hover:text-brand',
           )}
