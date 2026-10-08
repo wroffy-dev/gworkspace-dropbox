@@ -2465,3 +2465,376 @@
 :root[data-admin-theme="dark"] .admin-ui [class^="bg-blue-100/"] {
   background-color: rgb(59 130 246 / 0.14);
 }
+
+/* --- Comparison table (the `comparisonTable` block) ------------------------
+ *
+ * A hand-built table: its values come from the section, its look from the
+ * custom properties `comparisonStyleVars` writes on `.cms-ct`. Anything left
+ * unset falls back to the site's own tokens, so a table at its defaults looks
+ * like the rest of the site and follows Website design. Public pages only
+ * draw it; the admin's section editor draws the same markup as its preview.
+ */
+.cms-ct {
+  --_feature-w: clamp(7.5rem, 36vw, var(--ct-feature-w, 14rem));
+  --_bg: var(--ct-bg, rgb(var(--brand-background)));
+  --_text: rgb(var(--brand-text));
+  --_muted: rgb(var(--brand-muted));
+  --_border: var(--ct-border, rgb(var(--brand-border)));
+  --_hl: var(--ct-hl, var(--sec-primary, rgb(var(--brand-primary))));
+  --_head-bg: var(--ct-head-bg, color-mix(in srgb, var(--_text) 3%, var(--_bg)));
+  --_head-fg: var(--ct-head-fg, var(--_text));
+  --_group-bg: var(--ct-group-bg, color-mix(in srgb, var(--_hl) 6%, var(--_bg)));
+  --_stripe: var(--ct-stripe, color-mix(in srgb, var(--_text) 2.5%, var(--_bg)));
+  --_hl-tint: color-mix(in srgb, var(--_hl) 7%, var(--_bg));
+  --_radius: var(--ct-radius, 1.25rem);
+  --_pad-y: var(--ct-pad-y, 0.85rem);
+  --_pad-x: var(--ct-pad-x, 1rem);
+  min-width: 0;
+}
+
+.cms-ct__intro { max-width: 46rem; margin: 0 auto 2.5rem; text-align: center; }
+.cms-ct__eyebrow {
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.cms-ct__heading { font-size: clamp(1.6rem, 1.15rem + 1.6vw, 2.35rem); line-height: 1.15; color: var(--_text); }
+.cms-ct__description { margin-top: 0.9rem; font-size: 1.0625rem; line-height: 1.6; color: var(--_muted); }
+.cms-ct--inverted .cms-ct__heading { color: #fff; }
+.cms-ct--inverted .cms-ct__description { color: rgb(255 255 255 / 0.8); }
+.cms-ct--inverted :is(.cms-ct__disclaimer, .cms-ct__hint) { color: rgb(255 255 255 / 0.7); }
+
+/* The frame and its scroll area */
+.cms-ct__frame { position: relative; border-radius: var(--_radius); }
+.cms-ct--shadow .cms-ct__frame {
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 18px 40px -20px rgb(15 23 42 / 0.18);
+}
+.cms-ct__scroll {
+  /* The containing block for everything absolutely placed inside the table —
+     screen-reader labels, tooltips — so the scroll area clips them. Without
+     it they are placed against the frame outside it, and a cell far to the
+     right makes the whole page scroll sideways. */
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  background: var(--_bg);
+  scrollbar-width: thin;
+}
+.cms-ct__scroll:focus-visible { outline: 2px solid var(--_hl); outline-offset: 3px; }
+/* A sticky header needs something to stick to: the table scrolls inside itself. */
+.cms-ct--sticky-head .cms-ct__scroll { max-height: min(80vh, 52rem); overflow-y: auto; }
+
+.cms-ct__table {
+  width: 100%;
+  min-width: calc(var(--_feature-w) + var(--ct-ncol, 3) * var(--ct-col-min, 11rem));
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--ct-font, 0.9375rem);
+  line-height: 1.45;
+  color: var(--_text);
+}
+.cms-ct__table :is(th, td) {
+  padding: var(--_pad-y) var(--_pad-x);
+  vertical-align: middle;
+  background: var(--_bg);
+  overflow-wrap: anywhere;
+  transition: background-color 0.15s ease;
+}
+.cms-ct__corner { width: var(--_feature-w); text-align: left; vertical-align: bottom !important; }
+.cms-ct__corner-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--_muted);
+}
+
+/* Header */
+.cms-ct__table thead th {
+  background: var(--_head-bg);
+  color: var(--_head-fg);
+  font-weight: var(--ct-head-weight, 600);
+  /* Top-aligned, so names and prices line up across columns whether or not
+     one carries a badge. */
+  vertical-align: top;
+  padding-top: calc(var(--_pad-y) * 1.6);
+  padding-bottom: calc(var(--_pad-y) * 1.4);
+}
+.cms-ct__head { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; text-align: center; }
+.cms-ct--align-left .cms-ct__head { align-items: flex-start; text-align: left; }
+.cms-ct__col { position: relative; }
+/* Room above every column name for the badge, so the names stay level. */
+.cms-ct--has-badge .cms-ct__table thead th { padding-top: calc(var(--_pad-y) * 1.6 + 1.6rem); }
+.cms-ct__col .cms-ct__badge {
+  position: absolute;
+  top: calc(var(--_pad-y) * 1.1);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.cms-ct--align-left .cms-ct__col .cms-ct__badge { left: var(--_pad-x); transform: none; }
+.cms-ct__badge {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--_hl);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cms-ct__logo { width: auto; height: 2rem; max-width: 8rem; object-fit: contain; }
+.cms-ct__name { margin: 0; font-size: 1.0625em; font-weight: var(--ct-head-weight, 600); line-height: 1.25; color: inherit; }
+.cms-ct__subtitle { font-size: 0.8125rem; font-weight: 400; line-height: 1.4; color: var(--_muted); }
+.cms-ct__pricing { display: flex; flex-direction: column; align-items: inherit; margin-top: 0.35rem; }
+.cms-ct__price-lg { font-size: 1.5em; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.cms-ct__price-note { font-size: 0.75rem; font-weight: 400; color: var(--_muted); }
+.cms-ct__head-cta { display: block; width: 100%; margin-top: 0.75rem; }
+.cms-ct__cta { min-height: 2.5rem; }
+.cms-ct__cta-link { font-weight: 600; color: var(--_hl); text-decoration: none; }
+.cms-ct__cta-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Feature column */
+.cms-ct__feature { text-align: left; font-weight: 500; color: var(--_text); }
+.cms-ct__feature-inner { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+/* Group rows */
+.cms-ct__group th {
+  background: var(--_group-bg);
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--_hl) 70%, var(--_text));
+}
+/* The label stays in view when a wide table is scrolled sideways. */
+.cms-ct__group-label { position: sticky; left: var(--_pad-x); }
+
+/* Values */
+.cms-ct--align-center .cms-ct__cell { text-align: center; }
+.cms-ct__mark { display: inline-flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+.cms-ct--align-left .cms-ct__mark { align-items: flex-start; }
+.cms-ct__check,
+.cms-ct__cross {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+}
+.cms-ct__check { background: rgb(16 185 129 / 0.14); color: rgb(4 120 87); }
+.cms-ct__cross { background: color-mix(in srgb, var(--_muted) 14%, transparent); color: var(--_muted); }
+.cms-ct__icon { color: var(--_hl); }
+.cms-ct__note { display: block; font-size: 0.75rem; line-height: 1.35; color: var(--_muted); }
+.cms-ct__number { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cms-ct__unit { color: var(--_muted); }
+.cms-ct__value--price { display: inline-flex; flex-direction: column; align-items: center; }
+.cms-ct--align-left .cms-ct__value--price { align-items: flex-start; }
+.cms-ct__price { font-weight: 700; font-size: 1.05em; }
+.cms-ct__period { font-size: 0.75rem; color: var(--_muted); }
+.cms-ct__rich a { color: var(--_hl); text-decoration: underline; text-underline-offset: 2px; }
+.cms-ct__na { display: inline-flex; color: color-mix(in srgb, var(--_muted) 60%, transparent); }
+
+/* Borders */
+.cms-ct__table thead th { border-bottom: 1px solid var(--_border); }
+.cms-ct--borders-none .cms-ct__table thead th { border-bottom-color: transparent; }
+.cms-ct--borders-rows .cms-ct__table :is(tbody, tfoot) tr + tr > *,
+.cms-ct--borders-grid .cms-ct__table :is(tbody, tfoot) tr + tr > *,
+.cms-ct--borders-rows .cms-ct__table tfoot tr > *,
+.cms-ct--borders-grid .cms-ct__table tfoot tr > * { border-top: 1px solid var(--_border); }
+.cms-ct--borders-grid .cms-ct__table :is(th, td) + :is(th, td) { border-left: 1px solid var(--_border); }
+
+/* Stripes, highlight, hover — in that order, so the later one wins */
+.cms-ct--stripes .cms-ct__row.is-alt > * { background: var(--_stripe); }
+.cms-ct--hl-tint .is-hl,
+.cms-ct--hl-both .is-hl { background: var(--_hl-tint); }
+.cms-ct--hl-tint .cms-ct__row.is-alt > .is-hl,
+.cms-ct--hl-both .cms-ct__row.is-alt > .is-hl { background: color-mix(in srgb, var(--_hl) 10%, var(--_bg)); }
+.cms-ct--hl-outline .cms-ct__table .is-hl,
+.cms-ct--hl-both .cms-ct__table .is-hl { box-shadow: inset 2px 0 0 var(--_hl), inset -2px 0 0 var(--_hl); }
+.cms-ct--hl-outline .cms-ct__table thead .is-hl,
+.cms-ct--hl-both .cms-ct__table thead .is-hl {
+  box-shadow: inset 2px 0 0 var(--_hl), inset -2px 0 0 var(--_hl), inset 0 3px 0 var(--_hl);
+}
+.cms-ct--hl-outline .cms-ct__table > :last-child > tr:last-child > .is-hl,
+.cms-ct--hl-both .cms-ct__table > :last-child > tr:last-child > .is-hl {
+  box-shadow: inset 2px 0 0 var(--_hl), inset -2px 0 0 var(--_hl), inset 0 -2px 0 var(--_hl);
+}
+.cms-ct--hover .cms-ct__row:hover > * { background: color-mix(in srgb, var(--_hl) 5%, var(--_bg)); }
+.cms-ct--hover .cms-ct__row:hover > .is-hl { background: color-mix(in srgb, var(--_hl) 12%, var(--_bg)); }
+
+/* A column's own colours win over all of the above */
+/* Doubled class: outranks the stripe, tint and hover rules above on purpose. */
+.cms-ct .cms-ct__table tr > .has-col-bg.has-col-bg,
+.cms-ct .cms-ct__card.has-col-bg { background: var(--ct-col-bg); }
+.cms-ct .cms-ct__table .has-col-fg,
+.cms-ct .cms-ct__card.has-col-fg { color: var(--ct-col-fg); }
+.cms-ct .has-col-fg :is(.cms-ct__subtitle, .cms-ct__note, .cms-ct__price-note, .cms-ct__period, .cms-ct__unit) {
+  color: inherit;
+  opacity: 0.78;
+}
+
+/* Sticky feature column and header */
+.cms-ct--sticky-col .cms-ct__table :is(.cms-ct__feature, .cms-ct__corner) { position: sticky; left: 0; z-index: 2; }
+.cms-ct--sticky-col .cms-ct__frame[data-more-start] .cms-ct__table :is(.cms-ct__feature, .cms-ct__corner) {
+  box-shadow: 8px 0 14px -10px rgb(15 23 42 / 0.3);
+}
+.cms-ct--sticky-head .cms-ct__table thead th { position: sticky; top: 0; z-index: 3; }
+.cms-ct--sticky-head.cms-ct--sticky-col .cms-ct__table .cms-ct__corner { z-index: 4; }
+
+/* Scroll cues */
+.cms-ct__fade {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 2rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.cms-ct__fade--start {
+  left: 1px;
+  background: linear-gradient(to right, rgb(15 23 42 / 0.1), transparent);
+}
+.cms-ct--sticky-col .cms-ct__fade--start { left: var(--_feature-w); }
+.cms-ct__fade--end {
+  right: 1px;
+  border-radius: 0 var(--_radius) var(--_radius) 0;
+  background: linear-gradient(to left, rgb(15 23 42 / 0.1), transparent);
+}
+.cms-ct__frame[data-more-start] .cms-ct__fade--start,
+.cms-ct__frame[data-more-end] .cms-ct__fade--end { opacity: 1; }
+.cms-ct__hint {
+  display: none;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: right;
+  color: var(--_muted);
+}
+.cms-ct__hint span { display: inline-block; animation: cms-ct-nudge 1.6s ease-in-out infinite; }
+.cms-ct__frame[data-more-end] .cms-ct__hint { display: block; }
+
+/* Tooltips */
+.cms-ct__tip { position: relative; display: inline-flex; }
+.cms-ct__tip-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  color: var(--_muted);
+  cursor: help;
+}
+.cms-ct__tip-btn:hover { color: var(--_text); }
+.cms-ct__tip-btn:focus-visible { outline: 2px solid var(--_hl); outline-offset: 1px; }
+.cms-ct__tip-text {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -0.5rem;
+  z-index: 10;
+  width: max-content;
+  max-width: min(16rem, 70vw);
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.6rem;
+  background: rgb(15 23 42);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: 0 10px 30px -10px rgb(15 23 42 / 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.cms-ct__tip:hover .cms-ct__tip-text,
+.cms-ct__tip-btn:focus + .cms-ct__tip-text {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+/* Small print and empty states */
+.cms-ct__disclaimer { margin-top: 1rem; font-size: 0.75rem; line-height: 1.5; text-align: center; color: var(--_muted); }
+.cms-ct__empty {
+  padding: 2rem 1rem;
+  border: 1px dashed var(--_border);
+  border-radius: var(--_radius);
+  text-align: center;
+  color: var(--_muted);
+}
+
+/* Stacked cards, for tables that chose them on phones */
+.cms-ct__cards { display: none; }
+@media (max-width: 767px) {
+  .cms-ct--mobile-cards .cms-ct__frame { display: none; }
+  .cms-ct--mobile-cards .cms-ct__cards { display: grid; gap: 1rem; }
+}
+.cms-ct__card {
+  overflow: hidden;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  background: var(--_bg);
+  color: var(--_text);
+}
+.cms-ct--shadow .cms-ct__card { box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 14px 32px -18px rgb(15 23 42 / 0.2); }
+.cms-ct__card.is-hl { border-color: var(--_hl); box-shadow: 0 0 0 1px var(--_hl), 0 14px 32px -18px rgb(15 23 42 / 0.25); }
+.cms-ct__card-head { padding: 1.25rem 1rem 1rem; background: var(--_head-bg); border-bottom: 1px solid var(--_border); }
+.cms-ct__card.is-hl .cms-ct__card-head { background: var(--_hl-tint); }
+.cms-ct__card-list { margin: 0; padding: 0.25rem 1rem; list-style: none; }
+.cms-ct__card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  font-size: 0.875rem;
+}
+.cms-ct__card-row + .cms-ct__card-row { border-top: 1px solid var(--_border); }
+.cms-ct__card-label { min-width: 0; color: var(--_text); }
+.cms-ct__card-value { flex-shrink: 0; max-width: 55%; text-align: right; }
+.cms-ct__card-value .cms-ct__mark,
+.cms-ct__card-value .cms-ct__value--price { align-items: flex-end; }
+.cms-ct__card-group {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--_hl) 70%, var(--_text));
+}
+.cms-ct__card-cta { padding: 0.25rem 1rem 1.1rem; }
+
+/* Motion: a gentle entrance, and nothing at all for those who ask for less */
+@keyframes cms-ct-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cms-ct-nudge {
+  0%, 100% { transform: none; }
+  50% { transform: translateX(4px); }
+}
+.cms-ct--animate .cms-ct__frame,
+.cms-ct--animate .cms-ct__card { animation: cms-ct-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .cms-ct--animate .cms-ct__frame,
+  .cms-ct--animate .cms-ct__card,
+  .cms-ct__hint span { animation: none; }
+  .cms-ct__table :is(th, td),
+  .cms-ct__fade,
+  .cms-ct__tip-text { transition: none; }
+}

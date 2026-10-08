@@ -4,6 +4,7 @@ import type * as React from 'react';
 import type { FieldDescriptor } from '@/lib/cms/fields';
 import type { FieldValues } from './field-renderer';
 import { ImageWidgetEditor } from './image-widget-editor';
+import { ComparisonTableEditor } from './comparison-table-editor';
 
 /** What a block's own Content tab receives — the same as the generic field list. */
 export type ContentEditorProps = {
@@ -11,6 +12,16 @@ export type ContentEditorProps = {
   values: FieldValues;
   onChange: (name: string, value: unknown) => void;
   onChangeMany: (patch: Record<string, unknown>) => void;
+  /**
+   * `onChange` under a name of the editor's choosing for Undo.
+   *
+   * Undo collapses consecutive edits to the same control into one step. A
+   * block that stores a whole structure under one field — the comparison
+   * table's rows — would otherwise undo an hour of edits in one go; naming
+   * each edit after what it touched ("cell:row_1:col_2") keeps Undo a cell at
+   * a time. Takes a patch, so an edit that touches two fields is one step.
+   */
+  onChangeAs?: (control: string, patch: Record<string, unknown>) => void;
   idPrefix: string;
 };
 
@@ -24,4 +35,5 @@ export type ContentEditorProps = {
  */
 export const CONTENT_EDITORS: Partial<Record<string, React.ComponentType<ContentEditorProps>>> = {
   imageWidget: ImageWidgetEditor,
+  comparisonTable: ComparisonTableEditor,
 };

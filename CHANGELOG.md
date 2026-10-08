@@ -12,6 +12,36 @@ This project uses [semantic versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
 ### Added
 
+- **Comparison table section** (`comparisonTable`): a fully manual comparison
+  table in the page builder's Content group. It is independent of the Product
+  module and does not change the product comparison table.
+  - **Columns:** name, logo, subtitle, price, button, highlight and badge,
+    and their own colours.
+  - **Rows:**
+    - feature rows and group rows, with drag-and-drop and keyboard reordering
+    - duplicate, hide and delete, and tooltips
+    - per-cell types: text, rich text, checkmark, cross, icon, number, price,
+      empty
+  - **Design controls:**
+    - colours, borders, radius, padding, type, alignment
+    - highlight style, sticky feature column and header
+    - button style, hover and entrance animation
+  - **Responsive:** the table scrolls sideways with visible edges on tablets
+    and phones, or shows as stacked cards on phones. It respects reduced
+    motion.
+  - **Editor:** a live preview and full-screen editing. Undo works one cell
+    at a time.
+  - **Content and safety:**
+    - new tables start with clearly labelled demo content (Google Workspace,
+      Microsoft 365, Zoho Workplace)
+    - data is JSON in the section with stable ids
+    - parsing is per field, so a bad value never resets the table
+    - rich text and links are sanitised on save and on render
+  - See `docs/COMPARISON-TABLE.md`.
+- **Section editor:** custom Content editors can name each edit for Undo
+  (`onChangeAs`), so a block that stores a whole structure under one field
+  still undoes a step at a time.
+
 - **Glassier admin dashboard** (admin only):
   - A soft, fixed wash of brand blue, violet and teal sits behind the
     dashboard, so its glass has colour to frost.

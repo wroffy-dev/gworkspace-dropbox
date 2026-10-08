@@ -19,6 +19,7 @@ import { BLOG_BLOCKS } from './blog-blocks';
 import { PRODUCT_BLOCKS } from './product-blocks';
 import { SLIDER_BLOCKS } from './slider-blocks';
 import { productSourceFields } from './product-source';
+import { comparisonTableSchema, type ComparisonTableContent } from './comparison-table';
 
 /**
  * Block registry.
@@ -1025,6 +1026,229 @@ const PAGE_BLOCKS: Record<string, BlockDefinition> = {
         name: 'showDetailsLink',
         label: 'Show “View full details”',
         width: 'half',
+      },
+    ],
+  },
+
+  /*
+   * A hand-built comparison table. Independent of the product module: every
+   * column, row and value is typed into the section, so it needs no products
+   * and reads none. `productTable` above is the one that compares catalogue
+   * products, and stays as it is. The table itself is edited by the block's
+   * own Content editor (see `content-editors.tsx`); the fields here are the
+   * heading around it and the table's design.
+   */
+  comparisonTable: {
+    type: 'comparisonTable',
+    label: 'Comparison table',
+    description:
+      'A fully manual comparison: your own columns, feature rows, groups and values. No products needed.',
+    group: 'Content',
+    icon: 'table',
+    schema: comparisonTableSchema,
+    fields: [
+      { kind: 'text', name: 'eyebrow', label: 'Eyebrow', width: 'half', group: 'Heading' },
+      { kind: 'text', name: 'heading', label: 'Heading', width: 'half', group: 'Heading' },
+      { kind: 'textarea', name: 'description', label: 'Description', rows: 2, group: 'Heading' },
+      {
+        kind: 'textarea',
+        name: 'disclaimer',
+        label: 'Small print under the table',
+        rows: 2,
+        group: 'Heading',
+        help: 'For notes such as “Prices exclude tax”. Leave empty to show nothing.',
+      },
+
+      {
+        kind: 'text',
+        name: 'style.featureLabel',
+        label: 'Feature column title',
+        width: 'half',
+        group: 'Layout',
+      },
+      {
+        kind: 'select',
+        name: 'style.featureWidth',
+        label: 'Feature column width',
+        width: 'half',
+        group: 'Layout',
+        options: [
+          { label: 'Narrow', value: 'sm' },
+          { label: 'Medium', value: 'md' },
+          { label: 'Wide', value: 'lg' },
+        ],
+      },
+      {
+        kind: 'length',
+        name: 'style.columnMinWidth',
+        label: 'Minimum column width',
+        width: 'half',
+        group: 'Layout',
+        placeholder: '180px',
+        help: 'Below this the table scrolls sideways instead of squeezing.',
+      },
+      {
+        kind: 'select',
+        name: 'style.valueAlign',
+        label: 'Value alignment',
+        width: 'half',
+        group: 'Layout',
+        options: [
+          { label: 'Centre', value: 'center' },
+          { label: 'Left', value: 'left' },
+        ],
+      },
+      {
+        kind: 'boolean',
+        name: 'style.stickyFirstColumn',
+        label: 'Keep the feature column in view while scrolling',
+        width: 'half',
+        group: 'Layout',
+      },
+      {
+        kind: 'boolean',
+        name: 'style.stickyHeader',
+        label: 'Sticky header (long tables scroll inside the table)',
+        width: 'half',
+        group: 'Layout',
+      },
+      {
+        kind: 'select',
+        name: 'style.mobileLayout',
+        label: 'On phones',
+        width: 'half',
+        group: 'Layout',
+        options: [
+          { label: 'Scroll sideways', value: 'scroll' },
+          { label: 'Stacked cards', value: 'cards' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.ctaPlacement',
+        label: 'Buttons',
+        width: 'half',
+        group: 'Layout',
+        options: [
+          { label: 'Under each column heading', value: 'header' },
+          { label: 'At the bottom of the table', value: 'footer' },
+          { label: 'Both', value: 'both' },
+        ],
+      },
+
+      { kind: 'color', name: 'style.tableBackground', label: 'Table background', width: 'half', group: 'Colours' },
+      { kind: 'color', name: 'style.headerBackground', label: 'Header background', width: 'half', group: 'Colours' },
+      { kind: 'color', name: 'style.headerText', label: 'Header text', width: 'half', group: 'Colours' },
+      { kind: 'color', name: 'style.groupBackground', label: 'Group row background', width: 'half', group: 'Colours' },
+      { kind: 'color', name: 'style.borderColor', label: 'Borders', width: 'half', group: 'Colours' },
+      { kind: 'color', name: 'style.highlightColor', label: 'Highlighted column', width: 'half', group: 'Colours' },
+      { kind: 'boolean', name: 'style.stripes', label: 'Alternating row background', width: 'half', group: 'Colours' },
+      {
+        kind: 'color',
+        name: 'style.stripeColor',
+        label: 'Alternating row colour',
+        width: 'half',
+        group: 'Colours',
+        showWhen: { field: 'style.stripes', equals: [true] },
+      },
+
+      {
+        kind: 'select',
+        name: 'style.borders',
+        label: 'Borders',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Between rows', value: 'rows' },
+          { label: 'Full grid', value: 'grid' },
+          { label: 'None', value: 'none' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.radius',
+        label: 'Corner radius',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Square', value: 'none' },
+          { label: 'Small', value: 'sm' },
+          { label: 'Medium', value: 'md' },
+          { label: 'Large', value: 'lg' },
+          { label: 'Extra large', value: 'xl' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.highlightStyle',
+        label: 'Highlighted column style',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Tint and outline', value: 'both' },
+          { label: 'Tint only', value: 'tint' },
+          { label: 'Outline only', value: 'outline' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.density',
+        label: 'Cell padding',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Compact', value: 'compact' },
+          { label: 'Comfortable', value: 'comfortable' },
+          { label: 'Spacious', value: 'spacious' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.fontSize',
+        label: 'Text size',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Small', value: 'sm' },
+          { label: 'Medium', value: 'md' },
+          { label: 'Large', value: 'lg' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.headerWeight',
+        label: 'Header weight',
+        width: 'half',
+        group: 'Style',
+        options: [
+          { label: 'Medium', value: '500' },
+          { label: 'Semibold', value: '600' },
+          { label: 'Bold', value: '700' },
+        ],
+      },
+      {
+        kind: 'select',
+        name: 'style.ctaStyle',
+        label: 'Button style',
+        width: 'half',
+        group: 'Style',
+        help: 'The highlighted column always uses a filled button.',
+        options: [
+          { label: 'Outline', value: 'outline' },
+          { label: 'Filled', value: 'button' },
+          { label: 'Text link', value: 'link' },
+        ],
+      },
+      { kind: 'boolean', name: 'style.ctaFullWidth', label: 'Full-width buttons', width: 'half', group: 'Style' },
+      { kind: 'boolean', name: 'style.shadow', label: 'Soft shadow', width: 'half', group: 'Style' },
+      { kind: 'boolean', name: 'style.rowHover', label: 'Highlight the row under the pointer', width: 'half', group: 'Style' },
+      {
+        kind: 'boolean',
+        name: 'style.animate',
+        label: 'Subtle entrance animation',
+        width: 'half',
+        group: 'Style',
+        help: 'Skipped for visitors who ask for reduced motion.',
       },
     ],
   },
@@ -2304,3 +2528,4 @@ export type HeadingTextContent = z.infer<typeof headingTextSchema>;
 export type TextListImageContent = z.infer<typeof textListImageSchema>;
 export type StatisticsContent = z.infer<typeof statisticsSchema>;
 export type ProductGridContent = z.infer<typeof productGridSchema>;
+export type { ComparisonTableContent };

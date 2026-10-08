@@ -31,6 +31,7 @@ import type {
   HeadingTextContent,
   TextListImageContent,
   StatisticsContent,
+  ComparisonTableContent,
 } from '@/lib/cms/blocks';
 import type {
   LogoSliderContent,
@@ -88,6 +89,7 @@ import {
   LogoWallBlock,
 } from './blocks/content-blocks';
 import { ProductCardsBlock, ProductTableBlock, ProductGridBlock } from './blocks/product-blocks';
+import { ComparisonTableBlock } from './blocks/comparison-table-block';
 import { FaqBlock, TestimonialsBlock } from './blocks/social-blocks';
 import { CtaBlock, FormBlock, LeadMagnetBlock } from './blocks/conversion-blocks';
 import {
@@ -193,6 +195,8 @@ async function BlockBody({ section, ctx }: { section: RenderableSection; ctx: Bl
       return <ProductTableBlock content={parse<ProductTableContent>()} ctx={ctx} />;
     case 'productGrid':
       return <ProductGridBlock content={parse<ProductGridContent>()} ctx={ctx} />;
+    case 'comparisonTable':
+      return <ComparisonTableBlock content={parse<ComparisonTableContent>()} ctx={ctx} />;
     case 'faq':
       return <FaqBlock content={parse<FaqContent>()} ctx={ctx} />;
     case 'testimonials':
